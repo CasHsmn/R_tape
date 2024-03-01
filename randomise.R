@@ -1,6 +1,22 @@
 # MATCHED PAIR RANDOMISATION #
-library(MatchIt)
+library(nbpMatching)
 
-merged_df$condition <- as.integer((1:nrow(merged_df)) %% 2 == 0)
-matched_pairs <- match.data(matchit(condition ~ hh_size + fw_g + gender, data = merged_df, method = "nearest", distance = "mahalanobis"))
+set.seed(0934)
 
+X_mat <- cbind(merged_df$gender, merged_df$hh_size, merged_df$fw_g)
+
+dist_mat_covs <- round(dist(X_mat, diag = T, upper = T), 1)
+dist_mat <- as.matrix(dist_mat_covs)
+nbpdist <- distancematrix(dist_mat)
+nbpmatches <- nonbimatch(nbpdist)
+assignment <- assign.grp(nbpmatches)
+
+randomise <- data.frame(email = merged_df$RecipientEmail, phone = merged_df$phone, hh_size = merged_df$hh_size, gender = merged_df$gender, fw = merged_df$fw_g, condition = assignment$treatment.grp)
+
+# export
+write.csv(randomise, paste0(wd$output, "randomisation.csv"), row.names = F)
+
+# check randomisation
+# table(randomise$gender, randomise$condition)
+# boxplot(hh_size ~ condition, data = randomise)
+# boxplot(fw ~ condition, data = randomise)
