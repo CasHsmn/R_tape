@@ -1,33 +1,21 @@
-# LOAD DATA #
-
-# libraries
-library(dplyr)
-library(tidyr)
-library(ggplot2)
-
-# setup wd
-wd <- list()
-wd$data <-"C:/Users/huism080/OneDrive - Wageningen University & Research/Research/Study 2/tapeStudy/data/"
-wd$output <- "C:/Users/huism080/OneDrive - Wageningen University & Research/Research/Study 2/tapeStudy/output/"
-
-# LOAD DATA
 part <- read.csv(paste0(wd$data, "consent_r2.csv"))
 t0 <- read.csv(paste0(wd$data, "t0_r2.csv"))
+t0_r2 <- read.csv(paste0(wd$data, "t0_r2.csv"))
 manual <- read.csv(paste0(wd$data, "final_participants.csv"))
-
-signupconsent <- read.csv(paste0(wd$data, "signup_consent.csv"))
-t0 <- read.csv(paste0(wd$data, "T0_raw_final.csv"))
-t1 <- read.csv(paste0(wd$data, "T1_raw_final.csv")) %>% tolower(RecipientEmail)
-t2 <- read.csv(paste0(wd$data, "T2_raw_v1.csv")) %>% tolower(RecipientEmail)
-fw_manual <- read.csv(paste0(wd$data, "manual_fw_g.csv")) %>% select(-phone) %>% rename(RecipientEmail = email) %>% mutate(RecipientEmail = tolower(RecipientEmail))
-random <- read.csv(paste0(wd$data, "randomisation.csv")) %>% rename(RecipientEmail = email) %>% mutate(RecipientEmail = tolower(RecipientEmail))
-
 t0 <- t0[!is.na(t0$RecipientEmail) & t0$RecipientEmail != "", ]
 t0 <- t0[-c(1:2),]
 part$email <- paste(part$RecipientEmail, part$mail)
 part <- part[-c(1:2),]
 part$hh_size <- as.numeric(part$hh_size)
 part$hh_size <- part$hh_size + 1
+
+# select only the rows with new round 2 participants
+manual <- manual %>% 
+  slice((n() - 12):n())
+t0 <- t0 %>% 
+  slice((n() - 11):n())
+part <- part %>% 
+  slice((n() - 12):n())
 
 t0$RecipientEmail <- tolower(trimws(as.character(t0$RecipientEmail)))
 part$email <- tolower(trimws(as.character(part$email)))
