@@ -1,0 +1,17 @@
+---
+title: "Tape Intervention R Script"
+author: "Cas Huisman"
+format: html
+params:
+  path: "C:/Users/huism080/OneDrive - Wageningen University & Research/Research/Study 2/tapeStudy/data/" #specify the folder where the anonymised data is located
+---
+
+```{r}
+#| label: read data
+
+t0 <- read.csv(url("https://raw.githubusercontent.com/CasHsmn/R_tape/main/data/t0_anon.csv"))
+t1 <- read.csv(url("https://raw.githubusercontent.com/CasHsmn/R_tape/main/data/t1_anon.csv"))
+t2 <- read.csv(url("https://raw.githubusercontent.com/CasHsmn/R_tape/main/data/t2_anon.csv"))
+tall <- read.csv(url("https://raw.githubusercontent.com/CasHsmn/R_tape/main/data/tall_anon.csv"))
+
+```
