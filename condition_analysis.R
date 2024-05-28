@@ -93,3 +93,5 @@ ggplot(na.omit(merge_long_subset), aes(x = time, y = log_fw_g, fill = condition)
 
 
 hist(merge_long$fw_g)
+
+rm(t0)

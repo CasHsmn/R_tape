@@ -125,6 +125,7 @@ No sinificant effect for age, gender and household size on food waste. They are 
 ```{r}
 #| label: hypothesis-testing
 #| tbl-cap: Regression of demographics predicting FW
+#| tbl-cap-location: top
 
 tall <- tall %>%
   group_by(id) %>%
@@ -136,13 +137,16 @@ tall$gender[tall$gender == 4] <- 3
 tall$gender <- factor(tall$gender, levels = c(1,2,3), labels = c("Female", "Male", "Other"))
 lm_fw_1 <- lmer(fw_g_log ~ age + gender + hh_size + (1|id), data = tall)
 
-flextable(tidy(lm_fw_1)) %>% colformat_double(digits = 2)
+flextable(tidy(lm_fw_1),
+          col_keys = c()) 
+%>% colformat_double(digits = 2)
 ```
 
 
 
 ```{r}
 #| tbl-cap: Mixed model regression of food waste predicted by condition*time
+#| tbl-cap-location: top
 lm_fw_2 <- lmer(fw_g_log ~ condition*time + (1|id), data = tall)
 
 
@@ -150,6 +154,7 @@ nlme_fw <- lme(fw_g_log ~ condition * time, random = ~1 | id, data = tall)
 flextable(tidy(nlme_fw)) %>% colformat_double(digits = 2)
 flextable(as_tibble(confint(lm_fw_2), rownames = "term")) %>% colformat_double(digits = 3)
 ```
+# Contrasts
 The test shows a significant interaction of condition over time, so I will calculate emmeans and contrasts.
 ```{r}
 emmeans <- emmeans(nlme_fw, specs = ~ condition | time)

@@ -127,10 +127,6 @@ t2df <- t2df %>%
   mutate(hs_snack = (snack_hs_1 + snack_hs_2 + snack_hs_3 + snack_hs_4) / 4) %>% 
   mutate(hs_share = (share_hs_1 + share_hs_2 + share_hs_3 + share_hs_4) / 4)
 
-t0df <- t0df %>% rename_with(~paste0(., "_t0"), -id)
-t1df <- t1df %>% rename_with(~paste0(., "_t1"), -id)
-t2df <- t2df %>% rename_with(~paste0(., "_t2"), -id)  
-
 # Save new csv per measure to github repo
 write.csv(t0df, file = "C:/Users/huism080/OneDrive - Wageningen University & Research/Research/Study 2/tapeStudy/R_tape/data/t0_anon.csv", row.names = F)
 write.csv(t1df, file = "C:/Users/huism080/OneDrive - Wageningen University & Research/Research/Study 2/tapeStudy/R_tape/data/t1_anon.csv", row.names = F)
@@ -138,9 +134,9 @@ write.csv(t2df, file = "C:/Users/huism080/OneDrive - Wageningen University & Res
 
 ####### RUN UP TO HERE TO GENERATE NEW DATA #######
 
-# this is wrong. it needs to be longer, where the variables which are shared among the datasets stay in one column, and then the time column can differentiate between the different times. Then the descriptives
-merged_data <- t0df %>%
-  full_join(t1df, by = "id") %>%
-  full_join(t2df, by = "id")
+# this is wrong. it needs to be longer, where the variables which are shared among the datasets stay in one column, and then the time column can differentiate between the different times. Then the descriptives will be across all times
+# Need to remove the suffixes to make the colnames the same when merging so they collapse into one. Maybe suffixes can be added later, might be redundant. 
+
+merged_data <- bind_rows(t0df, t1df, t2df)
 
 write.csv(merged_data, file = "C:/Users/huism080/OneDrive - Wageningen University & Research/Research/Study 2/tapeStudy/R_tape/data/tall_anon.csv", row.names = F)
