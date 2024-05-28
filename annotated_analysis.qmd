@@ -1,7 +1,10 @@
 ---
 title: "Tape Intervention R Script"
 author: "Cas Huisman"
-format: html
+format: 
+  html:
+    code-fold: true
+    code-summary: "Show R script"
 params:
   path: "C:/Users/huism080/OneDrive - Wageningen University & Research/Research/Study 2/tapeStudy/data/" #specify the folder where the anonymised data is located
 ---
@@ -10,8 +13,18 @@ params:
 #| include: false
 #| label: libraries
 
-library(table1)
-library(vtable)
+library(table1) # sample characteristics
+library(vtable) # summary table
+library(ggplot2) # visualisation
+library(dplyr) # data tidying
+library(AER) # tobit models
+library(lme4) # mixed regression models
+library(nlme)
+library(broom) # tidy tables
+library(broom.mixed) # broom for mixed models
+library(flextable) # nice tables
+library(emmeans) # emmeans for post-hoc
+library(tidyr)
 ```
 
 ```{r}
@@ -31,14 +44,14 @@ tall <- read.csv(url("https://raw.githubusercontent.com/CasHsmn/R_tape/main/data
 #| echo: false
 
 # Sample descriptives; Label sample variables and create table 1
-t0$gender_t0[t0$gender_t0 == 4] <- 3
-t0$gender_t0 <- factor(t0$gender_t0, levels = c(1,2,3), labels = c("Female", "Male", "Other"))
-t0$condition_t0 <- factor(t0$condition_t0, levels = c("intervention", "control"), labels = c("intervention", "control"))
-label(t0$gender_t0) <- "Gender"
-label(t0$age_t0) <- "Age"
-label(t0$hh_size_t0) <- "Household size"
-label(t0$fw_g_t0) <- "Baseline waste"
-table1(~ gender_t0 + age_t0 + hh_size_t0 + fw_g_t0 | condition_t0, data = t0)
+t0$gender[t0$gender == 4] <- 3
+t0$gender <- factor(t0$gender, levels = c(1,2,3), labels = c("Female", "Male", "Other"))
+t0$condition <- factor(t0$condition, levels = c("intervention", "control"), labels = c("intervention", "control"))
+label(t0$gender) <- "Gender"
+label(t0$age) <- "Age"
+label(t0$hh_size) <- "Household size"
+label(t0$fw_g) <- "Baseline waste"
+table1(~ gender + age + hh_size + fw_g | condition, data = t0)
 ```
 
 # Descriptives
@@ -47,11 +60,108 @@ table1(~ gender_t0 + age_t0 + hh_size_t0 + fw_g_t0 | condition_t0, data = t0)
 #| echo: false
 #| warning: false
 
-st(t0, vars = c("pastweek_1_t0", "pastweek_2_t0", "pastweek_3_t0", "stock_freq_1_t0", "hs_stock_t0", "meal_freq._1_t0", "hs_meal_t0", "snack_freq_1_t0", "hs_snack_t0", "share_freq_1_t0", "hs_share_t0"), labels = c("Days at home", "Days ate at home", "Days prepared food", "Check if near expiry", "Habit: Check if near expired", "Use near expired food in meal", "Habit: Use near expired food in meal", "Snack near expired", "Habit: Snack near expired", "Share near expired", "Habit: Share near expired"), summ = c("mean(x)", "sd(x)", "median(x)"), out = 'kable', title = "Variable descriptives at T0", col.align = "center")
+st(tall, vars = c("pastweek_1", "pastweek_2", "pastweek_3", "stock_freq_1", "hs_stock", "meal_freq._1", "hs_meal", "snack_freq_1", "hs_snack", "share_freq_1", "hs_share"), labels = c("Days at home", "Days ate at home", "Days prepared food", "Check if near expiry", "Habit: Check if near expired", "Use near expired food in meal", "Habit: Use near expired food in meal", "Snack near expired", "Habit: Snack near expired", "Share near expired", "Habit: Share near expired"), summ = c("mean(x)", "sd(x)", "median(x)"), out = 'kable', title = "Overall variable descriptives", col.align = 'center')
+```
 
-st(t1, vars = c("pastweek_1_t1", "pastweek_2_t1", "pastweek_3_t1", "stock_freq_1_t1", "hs_stock_t1", "meal_freq._1_t1", "hs_meal_t1", "snack_freq_1_t1", "hs_snack_t1", "share_freq_1_t1", "hs_share_t1"), labels = c("Days at home", "Days ate at home", "Days prepared food", "Check if near expiry", "Habit: Check if near expired", "Use near expired food in meal", "Habit: Use near expired food in meal", "Snack near expired", "Habit: Snack near expired", "Share near expired", "Habit: Share near expired"), summ = c("mean(x)", "sd(x)", "median(x)"), out = 'kable', title = "Variable descriptives at T1", col.align = "center")
+```{r}
+#| label: barplots of food waste by condition and time
+#| tbl-cap: Bar plot
+#| ncol: 2
+#| fig-cap-location: top
+#| fig-cap: Bar plots
+#| fig-subcap: 
+#| - Food waste over time by condition with 95% CI
+#| - The log of food waste over time by condition with 95% CI
+#| warning: false
 
-st(t2, vars = c("pastweek_1_t2", "pastweek_2_t2", "pastweek_3_t2", "stock_freq_1_t2", "hs_stock_t2", "meal_freq._1_t2", "hs_meal_t2", "snack_freq_1_t2", "hs_snack_t2", "share_freq_1_t2", "hs_share_t2"), labels = c("Days at home", "Days ate at home", "Days prepared food", "Check if near expiry", "Habit: Check if near expired", "Use near expired food in meal", "Habit: Use near expired food in meal", "Snack near expired", "Habit: Snack near expired", "Share near expired", "Habit: Share near expired"), summ = c("mean(x)", "sd(x)", "median(x)"), out = 'kable', title = "Variable descriptives at T2", col.align = "center")
+
+tall$time <- factor(tall$time, levels = c(0,1,2), labels = c("pre", "post", "follow-up"))
+
+tall %>% 
+  group_by(condition, time) %>% 
+  summarise(
+    n=n(),
+    mean=mean(fw_g),
+    sd=sd(fw_g)
+  ) %>% 
+  mutate(se = sd/sqrt(n)) %>% 
+  mutate(ci=se*qt((1-0.05)/2 + .5, n-1)) %>% 
+  ggplot(aes(x = time, y = mean, fill = condition)) +
+  geom_bar(stat = "summary", fun = "mean", position = "dodge") +
+    geom_errorbar(aes(ymin = mean - ci, ymax = mean + ci),
+                position = position_dodge(width = 0.9), width = 0.25) +
+  labs(title = "Food waste (g) over time by condition with 95% CI",
+       x = "Time",
+       y = "Food Waste (g)",
+       fill = "Condition") +
+  theme_minimal()  
+
+tall <- mutate(tall, fw_g_log = log(fw_g + 1))
+
+tall %>% 
+  group_by(condition, time) %>% 
+  summarise(
+    n=n(),
+    mean=mean(fw_g_log),
+    sd=sd(fw_g_log)
+  ) %>% 
+  mutate(se = sd/sqrt(n)) %>% 
+  mutate(ci=se*qt((1-0.05)/2 + .5, n-1)) %>% 
+  ggplot(aes(x = time, y = mean, fill = condition)) +
+  geom_bar(stat = "summary", fun = "mean", position = "dodge") +
+    geom_errorbar(aes(ymin = mean - ci, ymax = mean + ci),
+                position = position_dodge(width = 0.9), width = 0.25) +
+  labs(title = "Food waste (g) over time by condition with 95% CI",
+       x = "Time",
+       y = "Food Waste (g)",
+       fill = "Condition") +
+  theme_minimal()  
+```
+# Inferential statistics
+
+*These always predict the log of food waste as it is more normally distributed*
+
+No sinificant effect for age, gender and household size on food waste. They are not included as covariates
+```{r}
+#| label: hypothesis-testing
+#| tbl-cap: Regression of demographics predicting FW
+
+tall <- tall %>%
+  group_by(id) %>%
+  mutate(age = ifelse(is.na(age), first(age), age),
+         gender = ifelse(is.na(gender), first(gender), gender)) %>%
+  ungroup()
+
+tall$gender[tall$gender == 4] <- 3
+tall$gender <- factor(tall$gender, levels = c(1,2,3), labels = c("Female", "Male", "Other"))
+lm_fw_1 <- lmer(fw_g_log ~ age + gender + hh_size + (1|id), data = tall)
+
+flextable(tidy(lm_fw_1)) %>% colformat_double(digits = 2)
 ```
 
 
+
+```{r}
+#| tbl-cap: Mixed model regression of food waste predicted by condition*time
+lm_fw_2 <- lmer(fw_g_log ~ condition*time + (1|id), data = tall)
+
+
+nlme_fw <- lme(fw_g_log ~ condition * time, random = ~1 | id, data = tall)
+flextable(tidy(nlme_fw)) %>% colformat_double(digits = 2)
+flextable(as_tibble(confint(lm_fw_2), rownames = "term")) %>% colformat_double(digits = 3)
+```
+The test shows a significant interaction of condition over time, so I will calculate emmeans and contrasts.
+```{r}
+emmeans <- emmeans(nlme_fw, specs = ~ condition | time)
+contrasts <- contrast(emmeans, method = "pairwise", adjust = "tukey")
+contrasts_time <- contrast(emmeans, method = "pairwise", by = "condition")
+flextable(tidy(contrasts_time)) %>% colformat_double(digits = 3)
+
+flextable(tidy(contrasts)) %>% colformat_double(digits = 3)
+```
+
+In the contrasts it shows that:
+* There is a significant drop in food waste for the intervention group from baseline to post-measure, but not in the control group
+* There is a marginally significant drop in food waste for the intervention group from post to follow-up
+* at baseline, there is no difference between control and intervention
+* at post and followup, people in the intervention group waste significantly less than those in the control group
