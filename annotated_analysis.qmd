@@ -147,20 +147,32 @@ flextable(tidy(lm_fw_1)) %>% colformat_double(digits = 2)
 #| tbl-cap-location: top
 lm_fw_2 <- lmer(fw_g_log ~ condition*time + (1|id), data = tall)
 
-
 nlme_fw <- lme(fw_g_log ~ condition * time, random = ~1 | id, data = tall)
 flextable(tidy(nlme_fw)) %>% colformat_double(digits = 2)
 flextable(as_tibble(confint(lm_fw_2), rownames = "term")) %>% colformat_double(digits = 3)
+
 ```
 # Contrasts
 The test shows a significant interaction of condition over time, so I will calculate emmeans and contrasts.
 ```{r}
-emmeans <- emmeans(nlme_fw, specs = ~ condition | time)
-contrasts <- contrast(emmeans, method = "pairwise", adjust = "tukey")
-contrasts_time <- contrast(emmeans, method = "pairwise", by = "condition")
+fw_emmeans <- emmeans(nlme_fw, specs = ~ condition | time)
+contrasts <- contrast(fw_emmeans, method = "pairwise", adjust = "tukey")
+contrasts_time <- contrast(fw_emmeans, method = "pairwise", by = "condition")
 flextable(tidy(contrasts_time)) %>% colformat_double(digits = 3)
 
 flextable(tidy(contrasts)) %>% colformat_double(digits = 3)
+
+fw_emmeans_df <- as.data.frame(fw_emmeans)
+
+ggplot(fw_emmeans_df, aes(x = time, y = emmean, color = condition, group = condition)) +
+  geom_point(size = 3) +
+  geom_line(size = 1) +
+  geom_errorbar(aes(ymin = emmean - SE, ymax = emmean + SE), width = 0.2) +
+  labs(title = "Estimated Marginal Means of fw_g_log by Condition and Time",
+       x = "Time",
+       y = "Log Transformed Food Waste (fw_g_log)",
+       color = "Condition") +
+  theme_minimal()
 ```
 
 In the contrasts it shows that:
@@ -169,3 +181,30 @@ In the contrasts it shows that:
 * There is a marginally significant drop in food waste for the intervention group from post to follow-up
 * at baseline, there is no difference between control and intervention
 * at post and followup, people in the intervention group waste significantly less than those in the control group
+
+
+# Habit analysis
+In this part I will first look if habit strength of the four behaviours can be predicted by condition*time
+```{r}
+lme_stockhs <- lme(hs_stock ~ condition*time, random = ~1|id, data = tall)
+flextable(tidy(lme_stockhs)) %>% colformat_double(digits = 2)
+
+emmeans_stockhs <- emmeans(lme_stockhs, specs = ~ condition | time)
+contrasts_stockhs <- contrast(emmeans_stockhs, method = "pairwise", adjust = "tukey")
+contrasts_time_stockhs <- contrast(emmeans_stockhs, method = "pairwise", by = "condition")
+flextable(tidy(contrasts_time_stockhs)) %>% colformat_double(digits = 3)
+
+flextable(tidy(contrasts_stockhs)) %>% colformat_double(digits = 3)
+
+emmeans_stock_df <- as.data.frame(emmeans_stockhs)
+
+ggplot(emmeans_stock_df, aes(x = time, y = emmean, color = condition, group = condition)) +
+  geom_point(size = 3) +
+  geom_line(size = 1) +
+  geom_errorbar(aes(ymin = emmean - SE, ymax = emmean + SE), width = 0.2) +
+  labs(title = "Estimated Marginal Means of habit strength of stock checking by Condition and Time",
+       x = "Time",
+       y = "Habit strength",
+       color = "Condition") +
+  theme_minimal()
+```

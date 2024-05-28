@@ -61,3 +61,37 @@ library(vtable)
 
 st(t0, vars = c("pastweek_1_t0", "pastweek_2_t0", "pastweek_3_t0", "stock_freq_1_t0", "hs_stock", "meal_freq._1_t0", "hs_meal", "snack_freq_1_t0", "hs_snack", "share_freq_1_t0", "hs_share"), labels = c("Days at home", "Ate at home", "Prepared food", "Check if near expiry", "Habit: Check if near expired", "Use near expired food in meal", "Habit: Use near expired food in meal", "Snack near expired", "Habit: Snack near expired", "Share near expired", "Habit: Share near expired"), summ = c("mean(x)", "median(x)"), out = 'kable')
 
+# habit strength of taking stock predicted by condition and time
+lme_stockhs <- lme(hs_stock ~ condition*time, random = ~1|id, data = tall)
+summary(lme_stockhs)
+
+emmeans_stockhs <- emmeans(lme_stockhs, specs = ~ condition | time)
+contrasts_stockhs <- contrast(emmeans_stockhs, method = "pairwise", adjust = "tukey")
+contrasts_time_stockhs <- contrast(emmeans_stockhs, method = "pairwise", by = "condition")
+
+emmeans_df <- as.data.frame(emmeans_stockhs)
+
+ggplot(emmeans_df, aes(x = time, y = emmean, color = condition, group = condition)) +
+  geom_point(size = 3) +
+  geom_line(size = 1) +
+  geom_errorbar(aes(ymin = emmean - SE, ymax = emmean + SE), width = 0.2) +
+  labs(title = "Estimated Marginal Means of habit strength of stock checking by Condition and Time",
+       x = "Time",
+       y = "Habit strength",
+       color = "Condition") +
+  theme_minimal()
+
+# habit strength of using near expired products in meals predicted by condition and time
+lme_mealhs <- lme(hs_meal ~ condition*time, random = ~1|id, data = tall)
+summary(lme_sharehs) # no significant effect for using near expired foods in meals whatsoever
+
+# habit strength of letting others know that food is near expiry so they can use it predicted by condition and time
+lme_sharehs <- lme(hs_share ~ condition*time, random = ~1|id, data = tall)
+summary(lme_sharehs)
+
+# habit strength of snacking near-expired product predicted by condition and time
+lme_snackhs <- lme(hs_snack ~ condition*time, random = ~1|id, data = tall)
+summary(lme_snackhs)
+
+
+
