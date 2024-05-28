@@ -164,6 +164,7 @@ flextable(tidy(contrasts)) %>% colformat_double(digits = 3)
 ```
 
 In the contrasts it shows that:
+
 * There is a significant drop in food waste for the intervention group from baseline to post-measure, but not in the control group
 * There is a marginally significant drop in food waste for the intervention group from post to follow-up
 * at baseline, there is no difference between control and intervention
