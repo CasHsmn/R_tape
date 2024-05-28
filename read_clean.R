@@ -77,7 +77,7 @@ t0df <- t0df %>%
   left_join(select(fw_manualdf, id, fw_g_t0), by = "id") %>%
   left_join(select(randomdf, id, condition), by = "id") %>% 
   left_join(select(signupconsentdf, id, hh_size), by = "id") %>% 
-  mutate_at(c("fw_g","hh_size"), as.numeric) %>% 
+  mutate(across(c("fw_g", "hh_size", 7:26), as.numeric)) %>%
   mutate(fw_g = ifelse(!is.na(fw_g_t0), fw_g_t0, fw_g)) %>%
   mutate(fw_g = ifelse(fw_g < 378, fw_g + 373, fw_g)) %>% # add the weight of the bin if the submitted weight is < than the weight of the bin (+5g for some deviations in bin weight)
   mutate(fw_g = fw_g - 373) %>% #subtract weight of bin
@@ -89,7 +89,7 @@ t1df <- t1df %>%
   left_join(select(fw_manualdf, id, fw_g_t1), by = "id") %>%
   left_join(select(randomdf, id, condition), by = "id") %>% 
   left_join(select(signupconsentdf, id, hh_size), by = "id") %>%
-  mutate_at(c("fw_g","hh_size"), as.numeric) %>% 
+  mutate(across(c("fw_g", "hh_size", 7:26), as.numeric)) %>% 
   mutate(fw_g = ifelse(!is.na(fw_g_t1), fw_g_t1, fw_g)) %>%
   mutate(fw_g = ifelse(fw_g < 378, fw_g + 373, fw_g)) %>% # add the weight of the bin if the submitted weight is < than the weight of the bin (+5g for some deviations in bin weight)
   mutate(fw_g = fw_g - 373) %>% #subtract weight of bin
@@ -101,7 +101,7 @@ t2df <- t2df %>%
   left_join(select(fw_manualdf, id, fw_g_t2), by = "id") %>%
   left_join(select(randomdf, id, condition), by = "id") %>% 
   left_join(select(signupconsentdf, id, hh_size), by = "id") %>%
-  mutate_at(c("fw_g","hh_size"), as.numeric) %>% 
+  mutate(across(c("fw_g", "hh_size", 7:26), as.numeric)) %>% 
   mutate(fw_g = ifelse(!is.na(fw_g_t2), fw_g_t2, fw_g)) %>%
   mutate(fw_g = ifelse(fw_g < 378, fw_g + 373, fw_g)) %>% # add the weight of the bin if the submitted weight is < than the weight of the bin (+5g for some deviations in bin weight)
   mutate(fw_g = fw_g - 373) %>% #subtract weight of bin
@@ -109,6 +109,27 @@ t2df <- t2df %>%
   mutate(condition = factor(condition, levels = c(0,1), labels = c("control", "intervention"))) %>% 
   mutate(time = 2)
 
+t0df <- t0df %>% 
+  mutate(hs_stock = (stock_hs_1 + stock_hs_2 + stock_hs_3 + stock_hs_4) / 4) %>% 
+  mutate(hs_meal = (meal_hs_1 + meal_hs_2 + meal_hs_3 + meal_hs_4) / 4) %>% 
+  mutate(hs_snack = (snack_hs_1 + snack_hs_2 + snack_hs_3 + snack_hs_4) / 4) %>% 
+  mutate(hs_share = (share_hs_1 + share_hs_2 + share_hs_3 + share_hs_4) / 4)
+
+t1df <- t1df %>% 
+  mutate(hs_stock = (stock_hs_1 + stock_hs_2 + stock_hs_3 + stock_hs_4) / 4) %>% 
+  mutate(hs_meal = (meal_hs_1 + meal_hs_2 + meal_hs_3 + meal_hs_4) / 4) %>% 
+  mutate(hs_snack = (snack_hs_1 + snack_hs_2 + snack_hs_3 + snack_hs_4) / 4) %>% 
+  mutate(hs_share = (share_hs_1 + share_hs_2 + share_hs_3 + share_hs_4) / 4)
+
+t2df <- t2df %>% 
+  mutate(hs_stock = (stock_hs_1 + stock_hs_2 + stock_hs_3 + stock_hs_4) / 4) %>% 
+  mutate(hs_meal = (meal_hs_1 + meal_hs_2 + meal_hs_3 + meal_hs_4) / 4) %>% 
+  mutate(hs_snack = (snack_hs_1 + snack_hs_2 + snack_hs_3 + snack_hs_4) / 4) %>% 
+  mutate(hs_share = (share_hs_1 + share_hs_2 + share_hs_3 + share_hs_4) / 4)
+
+t0df <- t0df %>% rename_with(~paste0(., "_t0"), -id)
+t1df <- t1df %>% rename_with(~paste0(., "_t1"), -id)
+t2df <- t2df %>% rename_with(~paste0(., "_t2"), -id)  
 
 # Save new csv per measure to github repo
 write.csv(t0df, file = "C:/Users/huism080/OneDrive - Wageningen University & Research/Research/Study 2/tapeStudy/R_tape/data/t0_anon.csv", row.names = F)
@@ -116,10 +137,8 @@ write.csv(t1df, file = "C:/Users/huism080/OneDrive - Wageningen University & Res
 write.csv(t2df, file = "C:/Users/huism080/OneDrive - Wageningen University & Research/Research/Study 2/tapeStudy/R_tape/data/t2_anon.csv", row.names = F)
 
 ####### RUN UP TO HERE TO GENERATE NEW DATA #######
-t0df <- t0df %>% rename_with(~paste0(., "_t0"), -id)
-t1df <- t1df %>% rename_with(~paste0(., "_t1"), -id)
-t2df <- t2df %>% rename_with(~paste0(., "_t2"), -id)  
 
+# this is wrong. it needs to be longer, where the variables which are shared among the datasets stay in one column, and then the time column can differentiate between the different times. Then the descriptives
 merged_data <- t0df %>%
   full_join(t1df, by = "id") %>%
   full_join(t2df, by = "id")
