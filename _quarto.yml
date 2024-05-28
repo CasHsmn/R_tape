@@ -1,14 +1,15 @@
 project:
   type: website
+  output-dir: docs
   
 
 website:
-  title: "output_share"
+  title: "Use-it-up tape intervention preliminary results"
   navbar:
     left:
       - href: index.qmd
         text: Home
-      - mca.qmd
+      - annotated_analysis.qmd
 
 format:
   html:

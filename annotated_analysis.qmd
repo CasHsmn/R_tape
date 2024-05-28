@@ -137,9 +137,7 @@ tall$gender[tall$gender == 4] <- 3
 tall$gender <- factor(tall$gender, levels = c(1,2,3), labels = c("Female", "Male", "Other"))
 lm_fw_1 <- lmer(fw_g_log ~ age + gender + hh_size + (1|id), data = tall)
 
-flextable(tidy(lm_fw_1),
-          col_keys = c()) 
-%>% colformat_double(digits = 2)
+flextable(tidy(lm_fw_1)) %>% colformat_double(digits = 2)
 ```
 
 
