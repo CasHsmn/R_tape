@@ -117,6 +117,25 @@ tall %>%
        fill = "Condition") +
   theme_minimal()  
 ```
+
+## Food waste distribution
+
+The distribution of food waste in the sample is as follows:
+
+There are `r sum(tall$fw_g == 0)` who wasted nothing
+```{r}
+
+ggplot(tall, aes(x = fw_g)) +
+  geom_histogram(binwidth = 20)+
+  labs(title = "Histogram of food waste (g)")
+
+ggplot(tall, aes(x = fw_g_log)) +
+  geom_histogram()  +
+  labs(title = "Histogram of log transformed food waste")
+
+sum(tall$fw_g == 0)
+
+```
 # Inferential statistics
 
 *These always predict the log of food waste as it is more normally distributed*
@@ -138,6 +157,9 @@ tall$gender <- factor(tall$gender, levels = c(1,2,3), labels = c("Female", "Male
 lm_fw_1 <- lmer(fw_g_log ~ age + gender + hh_size + (1|id), data = tall)
 
 flextable(tidy(lm_fw_1)) %>% colformat_double(digits = 2)
+
+lm_fw_0 <- lmer(fw_g_log ~ pastweek_1 + pastweek_2 + pastweek_3 + (1|id), data = tall)
+summary(lm_fw_0)
 ```
 
 
@@ -185,7 +207,11 @@ In the contrasts it shows that:
 
 # Habit analysis
 In this part I will first look if habit strength of the four behaviours can be predicted by condition*time
+
+## Habit of checking which food is near expiry
 ```{r}
+
+
 lme_stockhs <- lme(hs_stock ~ condition*time, random = ~1|id, data = tall)
 flextable(tidy(lme_stockhs)) %>% colformat_double(digits = 2)
 
@@ -208,3 +234,80 @@ ggplot(emmeans_stock_df, aes(x = time, y = emmean, color = condition, group = co
        color = "Condition") +
   theme_minimal()
 ```
+## Habit of letting housemates know they can eat food which is near expired
+```{r}
+
+lme_sharehs <- lme(hs_share ~ condition*time, random = ~1|id, data = tall)
+flextable(tidy(lme_sharehs)) %>% colformat_double(digits = 2)
+
+emmeans_sharehs <- emmeans(lme_sharehs, specs = ~ condition | time)
+contrasts_sharehs <- contrast(emmeans_sharehs, method = "pairwise", adjust = "tukey")
+contrasts_time_sharehs <- contrast(emmeans_sharehs, method = "pairwise", by = "condition")
+flextable(tidy(contrasts_time_sharehs)) %>% colformat_double(digits = 3)
+
+flextable(tidy(contrasts_sharehs)) %>% colformat_double(digits = 3)
+
+emmeans_share_df <- as.data.frame(emmeans_sharehs)
+
+ggplot(emmeans_share_df, aes(x = time, y = emmean, color = condition, group = condition)) +
+  geom_point(size = 3) +
+  geom_line(size = 1) +
+  geom_errorbar(aes(ymin = emmean - SE, ymax = emmean + SE), width = 0.2) +
+  labs(title = "Estimated Marginal Means of habit strength of share checking by Condition and Time",
+       x = "Time",
+       y = "Habit strength",
+       color = "Condition") +
+  theme_minimal()
+```
+
+## Habit of using near expired foods when preparing meals
+```{r}
+
+lme_mealhs <- lme(hs_meal ~ condition*time, random = ~1|id, data = tall)
+flextable(tidy(lme_mealhs)) %>% colformat_double(digits = 2)
+
+emmeans_mealhs <- emmeans(lme_mealhs, specs = ~ condition | time)
+contrasts_mealhs <- contrast(emmeans_mealhs, method = "pairwise", adjust = "tukey")
+contrasts_time_mealhs <- contrast(emmeans_mealhs, method = "pairwise", by = "condition")
+flextable(tidy(contrasts_time_mealhs)) %>% colformat_double(digits = 3)
+
+flextable(tidy(contrasts_mealhs)) %>% colformat_double(digits = 3)
+
+emmeans_meal_df <- as.data.frame(emmeans_mealhs)
+
+ggplot(emmeans_meal_df, aes(x = time, y = emmean, color = condition, group = condition)) +
+  geom_point(size = 3) +
+  geom_line(size = 1) +
+  geom_errorbar(aes(ymin = emmean - SE, ymax = emmean + SE), width = 0.2) +
+  labs(title = "Estimated Marginal Means of habit strength of meal checking by Condition and Time",
+       x = "Time",
+       y = "Habit strength",
+       color = "Condition") +
+  theme_minimal()
+```
+## Habit of picking something which is near expired as a snack
+```{r}
+
+lme_snackhs <- lme(hs_snack ~ condition*time, random = ~1|id, data = tall)
+flextable(tidy(lme_snackhs)) %>% colformat_double(digits = 2)
+
+emmeans_snackhs <- emmeans(lme_snackhs, specs = ~ condition | time)
+contrasts_snackhs <- contrast(emmeans_snackhs, method = "pairwise", adjust = "tukey")
+contrasts_time_snackhs <- contrast(emmeans_snackhs, method = "pairwise", by = "condition")
+flextable(tidy(contrasts_time_snackhs)) %>% colformat_double(digits = 3)
+
+flextable(tidy(contrasts_snackhs)) %>% colformat_double(digits = 3)
+
+emmeans_snack_df <- as.data.frame(emmeans_snackhs)
+
+ggplot(emmeans_snack_df, aes(x = time, y = emmean, color = condition, group = condition)) +
+  geom_point(size = 3) +
+  geom_line(size = 1) +
+  geom_errorbar(aes(ymin = emmean - SE, ymax = emmean + SE), width = 0.2) +
+  labs(title = "Estimated Marginal Means of habit strength of snack checking by Condition and Time",
+       x = "Time",
+       y = "Habit strength",
+       color = "Condition") +
+  theme_minimal()
+```
+

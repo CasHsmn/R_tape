@@ -94,4 +94,44 @@ lme_snackhs <- lme(hs_snack ~ condition*time, random = ~1|id, data = tall)
 summary(lme_snackhs)
 
 
+# BAR PLOT OF STOCK CHECK FREQUENCY BY TIME
+avg_hs <- tall %>%
+  group_by(time, condition) %>%
+  summarise(avg_hs_stock = mean(hs_stock),
+            avg_hs_meal = mean(hs_meal),
+            avg_hs_snack = mean(hs_snack),
+            avg_hs_share = mean(hs_share),
+            avg_freq_stock = mean(stock_freq_1, na.rm =T),
+            avg_freq_meal = mean(meal_freq_1, na.rm =T),
+            avg_freq_snack = mean(snack_freq_1, na.rm =T),
+            avg_freq_share = mean(share_freq_1, na.rm =T))
+
+ggplot(avg_hs, aes(x = time, y = avg_hs_stock, fill = condition)) +
+  geom_bar(stat = "identity", position = position_dodge()) +
+  theme_minimal()
+
+ggplot(avg_hs, aes(x = time, y = avg_hs_meal, fill = time)) +
+  geom_bar(stat = "identity") +
+  theme_minimal()
+
+
+
+testfwlmestock <- lme(fw_g_log ~ hs_stock + condition*time, random = ~1|id, data = tall)
+summary(testfwlmestock)
+
+
+# Ensure 'condition' is a factor
+tall$condition <- as.factor(tall$condition)
+
+# Fit the mediator model
+mediator_model <- lmer(hs_stock ~ condition + time + (1|id), data = tall)
+
+# Fit the outcome model
+outcome_model <- lmer(fw_g_log ~ condition + time + hs_stock + (1|id), data = tall)
+
+# Conduct the mediation analysis
+mediation_result <- mediate(mediator_model, outcome_model, treat = "condition", mediator = "hs_stock", treat.value = "intervention", control.value = "control", sims = 1000)
+
+# Summary of the mediation analysis
+summary(mediation_result)
 
