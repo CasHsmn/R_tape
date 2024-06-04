@@ -11,14 +11,14 @@
     "href": "annotated_analysis.html",
     "title": "Tape Intervention R Script",
     "section": "",
-    "text": "intervention\n(N=32)\ncontrol\n(N=31)\nOverall\n(N=63)\n\n\n\n\nGender\n\n\n\n\n\nFemale\n25 (78.1%)\n22 (71.0%)\n47 (74.6%)\n\n\nMale\n6 (18.8%)\n7 (22.6%)\n13 (20.6%)\n\n\nOther\n1 (3.1%)\n2 (6.5%)\n3 (4.8%)\n\n\nAge\n\n\n\n\n\nMean (SD)\n20.4 (2.01)\n20.8 (2.16)\n20.6 (2.08)\n\n\nMedian [Min, Max]\n20.0 [18.0, 26.0]\n20.0 [18.0, 27.0]\n20.0 [18.0, 27.0]\n\n\nHousehold size\n\n\n\n\n\nMean (SD)\n6.28 (5.08)\n7.10 (5.64)\n6.68 (5.34)\n\n\nMedian [Min, Max]\n5.00 [2.00, 26.0]\n5.00 [2.00, 25.0]\n5.00 [2.00, 26.0]\n\n\nBaseline waste\n\n\n\n\n\nMean (SD)\n303 (277)\n340 (420)\n321 (352)\n\n\nMedian [Min, Max]\n217 [13.0, 1270]\n180 [16.0, 1800]\n197 [13.0, 1800]"
+    "text": "intervention\n(N=32)\ncontrol\n(N=31)\nOverall\n(N=63)\n\n\n\n\nGender\n\n\n\n\n\nFemale\n25 (78.1%)\n22 (71.0%)\n47 (74.6%)\n\n\nMale\n6 (18.8%)\n7 (22.6%)\n13 (20.6%)\n\n\nOther\n1 (3.1%)\n2 (6.5%)\n3 (4.8%)\n\n\nAge\n\n\n\n\n\nMean (SD)\n20.4 (2.01)\n20.8 (2.16)\n20.6 (2.08)\n\n\nMedian [Min, Max]\n20.0 [18.0, 26.0]\n20.0 [18.0, 27.0]\n20.0 [18.0, 27.0]\n\n\nHousehold size\n\n\n\n\n\nMean (SD)\n6.28 (5.08)\n7.10 (5.64)\n6.68 (5.34)\n\n\nMedian [Min, Max]\n5.00 [2.00, 26.0]\n5.00 [2.00, 25.0]\n5.00 [2.00, 26.0]\n\n\nBaseline waste\n\n\n\n\n\nMean (SD)\n256 (292)\n316 (428)\n286 (364)\n\n\nMedian [Min, Max]\n180 [1.00, 1270]\n165 [0, 1800]\n179 [0, 1800]"
   },
   {
     "objectID": "annotated_analysis.html#food-waste-distribution",
     "href": "annotated_analysis.html#food-waste-distribution",
     "title": "Tape Intervention R Script",
     "section": "Food waste distribution",
-    "text": "Food waste distribution\nThe distribution of food waste in the sample is as follows:\nThere are 2 who wasted nothing\n\n\nShow R script\nggplot(tall, aes(x = fw_g)) +\n  geom_histogram(binwidth = 20)+\n  labs(title = \"Histogram of food waste (g)\")\n\n\n\n\n\nShow R script\nggplot(tall, aes(x = fw_g_log)) +\n  geom_histogram()  +\n  labs(title = \"Histogram of log transformed food waste\")\n\n\n`stat_bin()` using `bins = 30`. Pick better value with `binwidth`.\n\n\n\n\n\nShow R script\nsum(tall$fw_g == 0)\n\n\n[1] 2"
+    "text": "Food waste distribution\nThe distribution of food waste in the sample is as follows:\nThere are 6 who wasted nothing\n\n\nShow R script\nggplot(tall, aes(x = fw_g)) +\n  geom_histogram(binwidth = 20)+\n  labs(title = \"Histogram of food waste (g)\")\n\n\n\n\n\nShow R script\nggplot(tall, aes(x = fw_g_log)) +\n  geom_histogram()  +\n  labs(title = \"Histogram of log transformed food waste\")\n\n\n`stat_bin()` using `bins = 30`. Pick better value with `binwidth`.\n\n\n\n\n\nShow R script\nsum(tall$fw_g == 0)\n\n\n[1] 6"
   },
   {
     "objectID": "annotated_analysis.html#habit-of-checking-which-food-is-near-expiry",

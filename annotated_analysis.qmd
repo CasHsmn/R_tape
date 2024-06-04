@@ -109,8 +109,6 @@ tall %>%
   mutate(ci=se*qt((1-0.05)/2 + .5, n-1)) %>% 
   ggplot(aes(x = time, y = mean, fill = condition)) +
   geom_bar(stat = "summary", fun = "mean", position = "dodge") +
-    geom_errorbar(aes(ymin = mean - ci, ymax = mean + ci),
-                position = position_dodge(width = 0.9), width = 0.25) +
   labs(title = "Food waste (g) over time by condition with 95% CI",
        x = "Time",
        y = "Food Waste (g)",

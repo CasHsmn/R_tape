@@ -116,7 +116,7 @@ ggplot(avg_hs, aes(x = time, y = avg_hs_meal, fill = time)) +
 
 
 
-testfwlmestock <- lme(fw_g_log ~ hs_stock + condition*time, random = ~1|id, data = tall)
+testfwlmestock <- lmer(fw_g ~ condition*time, random = ~1|id, data = tall)
 summary(testfwlmestock)
 
 
@@ -135,3 +135,16 @@ mediation_result <- mediate(mediator_model, outcome_model, treat = "condition", 
 # Summary of the mediation analysis
 summary(mediation_result)
 
+tall$time <- as.factor(tall$time)
+talllong <- pivot_longer(tall, names_to = "time")
+
+?pivot_longer
+
+t2tall <- tall %>% 
+  subset(time =="follow-up")
+
+str(tall$time)
+
+lm(fw_g_log ~ condition + hs_stock, data=t2tall)
+summary(lm(fw_g_log ~ condition, data=t2tall))
+?subset
