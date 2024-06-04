@@ -1,3 +1,5 @@
+library(psych)
+
 part <- read.csv(paste0(wd$data, "consent_r2.csv"))
 t0 <- read.csv(paste0(wd$data, "t0_r2.csv"))
 t0_r2 <- read.csv(paste0(wd$data, "t0_r2.csv"))
@@ -148,3 +150,43 @@ str(tall$time)
 lm(fw_g_log ~ condition + hs_stock, data=t2tall)
 summary(lm(fw_g_log ~ condition, data=t2tall))
 ?subset
+
+nlme_fwg <- lme(fw_g ~ condition * time, random = ~1 | id, data = tall)
+nlme_fw <- lme(fw_g_log ~ condition * time, random = ~1 | id, data = tall)
+summary(nlme_fwg)
+summary(nlme_fw)
+
+
+subset(t0df, condition == "control")
+
+describeBy(t0df$fw_g_log, t0df$condition)
+
+ggplot(t2df, aes(fw_g)) + geom_histogram(binwidth = 20)
+
+# TESTING THE MODEL WITH FW(G) INSTEAD OF LOG TRANSFORMED TO COMPARE WITH SPSS OUTPUT
+lm_fw_2_t <- lmer(fw_g ~ condition*time + (1|id), data = tall)
+
+nlme_fw_t <- lme(fw_g ~ condition * time, random = ~1 | id, data = tall)
+flextable(tidy(nlme_fw_t)) %>% colformat_double(digits = 2)
+flextable(as_tibble(confint(lm_fw_2_t), rownames = "term")) %>% colformat_double(digits = 3)
+
+# Contrasts
+
+fw_emmeans_t <- emmeans(nlme_fw_t, specs = ~ condition | time)
+contrasts_t <- contrast(fw_emmeans_t, method = "pairwise", adjust = "tukey")
+contrasts_time_t <- contrast(fw_emmeans_t, method = "pairwise", by = "condition")
+flextable(tidy(contrasts_time_t)) %>% colformat_double(digits = 3)
+
+flextable(tidy(contrasts_t)) %>% colformat_double(digits = 3)
+
+fw_emmeans_df <- as.data.frame(fw_emmeans)
+
+ggplot(fw_emmeans_df, aes(x = time, y = emmean, color = condition, group = condition)) +
+  geom_point(size = 3) +
+  geom_line(size = 1) +
+  geom_errorbar(aes(ymin = emmean - SE, ymax = emmean + SE), width = 0.2) +
+  labs(title = "Estimated Marginal Means of fw_g by Condition and Time",
+       x = "Time",
+       y = "Log Transformed Food Waste (fw_g)",
+       color = "Condition") +
+  theme_minimal()

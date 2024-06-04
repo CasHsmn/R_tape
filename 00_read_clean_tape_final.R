@@ -79,8 +79,8 @@ t0df <- t0df %>%
   left_join(select(signupconsentdf, id, hh_size), by = "id") %>% 
   mutate(across(c("fw_g", "hh_size", 7:26), as.numeric)) %>%
   mutate(fw_g = ifelse(!is.na(fw_g_t0), fw_g_t0, fw_g)) %>%
-  mutate(fw_g = ifelse(fw_g < 373, fw_g + 373, fw_g)) %>% # add the weight of the bin if the submitted weight is < than the weight of the bin (+5g for some deviations in bin weight)
-  mutate(fw_g = fw_g - 373) %>% #subtract weight of bin
+  #mutate(fw_g = ifelse(fw_g < 380 & fw_g > 370, 373, fw_g)) %>% 
+  mutate(fw_g = ifelse(fw_g >= 373, fw_g - 373, fw_g)) %>% 
   select(-fw_g_t0) %>% 
   mutate(condition = factor(condition, levels = c(0,1), labels = c("control", "intervention"))) %>% 
   mutate(time = 0)
@@ -91,8 +91,8 @@ t1df <- t1df %>%
   left_join(select(signupconsentdf, id, hh_size), by = "id") %>%
   mutate(across(c("fw_g", "hh_size", 7:26), as.numeric)) %>% 
   mutate(fw_g = ifelse(!is.na(fw_g_t1), fw_g_t1, fw_g)) %>%
-  mutate(fw_g = ifelse(fw_g < 373, fw_g + 373, fw_g)) %>% # add the weight of the bin if the submitted weight is < than the weight of the bin (+5g for some deviations in bin weight)
-  mutate(fw_g = fw_g - 373) %>% #subtract weight of bin
+  #mutate(fw_g = ifelse(fw_g < 380 & fw_g > 370, 373, fw_g)) %>% 
+  mutate(fw_g = ifelse(fw_g >= 373, fw_g - 373, fw_g)) %>%
   select(-fw_g_t1) %>% 
   mutate(condition = factor(condition, levels = c(0,1), labels = c("control", "intervention"))) %>% 
   mutate(time = 1)
@@ -103,8 +103,8 @@ t2df <- t2df %>%
   left_join(select(signupconsentdf, id, hh_size), by = "id") %>%
   mutate(across(c("fw_g", "hh_size", 7:26), as.numeric)) %>% 
   mutate(fw_g = ifelse(!is.na(fw_g_t2), fw_g_t2, fw_g)) %>%
-  mutate(fw_g = ifelse(fw_g < 373, fw_g + 373, fw_g)) %>% # add the weight of the bin if the submitted weight is < than the weight of the bin (+5g for some deviations in bin weight)
-  mutate(fw_g = fw_g - 373) %>% #subtract weight of bin
+  #mutate(fw_g = ifelse(fw_g < 380 & fw_g > 370, 373, fw_g)) %>% 
+  mutate(fw_g = ifelse(fw_g >= 373, fw_g - 373, fw_g)) %>%
   select(-fw_g_t2) %>% 
   mutate(condition = factor(condition, levels = c(0,1), labels = c("control", "intervention"))) %>% 
   mutate(time = 2)
@@ -137,14 +137,4 @@ write.csv(t2df, file = "C:/Users/huism080/OneDrive - Wageningen University & Res
 # this is wrong. it needs to be longer, where the variables which are shared among the datasets stay in one column, and then the time column can differentiate between the different times. Then the descriptives will be across all times
 # Need to remove the suffixes to make the colnames the same when merging so they collapse into one. Maybe suffixes can be added later, might be redundant. 
 
-merged_data <- bind_rows(t0df, t1df, t2df)
-
-
-sum(t0df$fw_g == 0)
-sum(t1df$fw_g == 0)
-sum(t2df$fw_g == 0)
-
-hist(t0df$fw_g)
-hist(merged_data$fw_g)
-hist(tall$fw_g)
 write.csv(merged_data, file = "C:/Users/huism080/OneDrive - Wageningen University & Research/Research/Study 2/tapeStudy/R_tape/data/tall_anon.csv", row.names = F)
