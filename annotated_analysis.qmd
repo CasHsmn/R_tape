@@ -50,6 +50,7 @@ tall <- read.csv(url("https://raw.githubusercontent.com/CasHsmn/R_tape/main/data
 t0$gender[t0$gender == 4] <- 3
 t0$gender <- factor(t0$gender, levels = c(1,2,3), labels = c("Female", "Male", "Other"))
 t0$condition <- factor(t0$condition, levels = c("intervention", "control"), labels = c("intervention", "control"))
+tall$condition <- factor(tall$condition)
 label(t0$gender) <- "Gender"
 label(t0$age) <- "Age"
 label(t0$hh_size) <- "Household size"
@@ -101,7 +102,7 @@ tall %>%
         legend.title = element_text(size = 14, family = "TT Arial"),
         legend.text = element_text(size = 12, family = "TT Arial"),
         axis.line = element_line(colour = "darkgray", size = 1, linetype = "solid"),
-        panel.background = element_rect(fill = "#transparent"),
+        panel.background = element_rect(fill = "transparent"),
         panel.grid.major = element_line(size = .05, linetype = "solid", colour = "grey")) +
   scale_y_continuous(expand = c(0, 0), limits = c(0,450)) +
   scale_fill_brewer(palette = "Pastel2")
@@ -140,7 +141,7 @@ tall %>%
 
 The distribution of food waste in the sample is as follows:
 
-There are `r sum(tall$fw_g == 0)` who wasted nothing
+As the histograms below show, food waste is very right skewed with many 0s. The distribution is better after log transformation.
 ```{r}
 
 ggplot(tall, aes(x = fw_g)) +
@@ -148,17 +149,13 @@ ggplot(tall, aes(x = fw_g)) +
   labs(title = "Histogram of food waste (g)")
 
 ggplot(tall, aes(x = fw_g_log)) +
-  geom_histogram()  +
+  geom_histogram(binwidth = .2)  +
   labs(title = "Histogram of log transformed food waste")
-
-sum(tall$fw_g == 0)
-
 ```
 # Inferential statistics
 
-*These always predict the log of food waste as it is more normally distributed*
 
-No sinificant effect for age, gender and household size on food waste. They are not included as covariates
+No significant effect for age, gender and household size on food waste. They are not included as covariates.
 ```{r}
 #| label: hypothesis-testing
 #| tbl-cap: Regression of demographics predicting FW
@@ -176,8 +173,7 @@ lm_fw_1 <- lmer(fw_g_log ~ age + gender + hh_size + (1|id), data = tall)
 
 flextable(tidy(lm_fw_1)) %>% colformat_double(digits = 2)
 
-lm_fw_0 <- lmer(fw_g ~ pastweek_1 + pastweek_2 + pastweek_3 + (1|id), data = tall)
-summary(lm_fw_0)
+lm_fw_0 <- lme(fw_g ~ pastweek_1 + pastweek_2 + pastweek_3, random = ~1 | id, data = tall) # mixed model for the control variables of days home/cooked etc.
 ```
 
 
@@ -185,11 +181,11 @@ summary(lm_fw_0)
 ```{r}
 #| tbl-cap: Mixed model regression of food waste predicted by condition*time
 #| tbl-cap-location: top
-lm_fw_2 <- lmer(fw_g_log ~ condition*time + (1|id), data = tall)
+lm_fw_2 <- lme(fw_g_log ~ condition * time, random = ~1 | id, data = tall)
+flextable(tidy(lm_fw_2)) %>% colformat_double(digits = 2) %>% set_caption(caption = "Coefficients for mixed model predicting log transformed fw(g)")
 
 nlme_fw <- lme(fw_g ~ condition * time, random = ~1 | id, data = tall)
-flextable(tidy(nlme_fw)) %>% colformat_double(digits = 2)
-flextable(as_tibble(confint(lm_fw_2), rownames = "term")) %>% colformat_double(digits = 3)
+flextable(tidy(nlme_fw)) %>% colformat_double(digits = 2) %>% set_caption(caption = "Coefficients for mixed model predicting fw(g)")
 
 ```
 
