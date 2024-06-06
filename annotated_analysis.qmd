@@ -37,7 +37,9 @@ showtext_auto()
 t0 <- read.csv(url("https://raw.githubusercontent.com/CasHsmn/R_tape/main/data/t0_anon.csv"))
 t1 <- read.csv(url("https://raw.githubusercontent.com/CasHsmn/R_tape/main/data/t1_anon.csv"))
 t2 <- read.csv(url("https://raw.githubusercontent.com/CasHsmn/R_tape/main/data/t2_anon.csv"))
-tall <- read.csv(url("https://raw.githubusercontent.com/CasHsmn/R_tape/main/data/tall_anon.csv"))
+tall3 <- read.csv(url("https://raw.githubusercontent.com/CasHsmn/R_tape/main/data/tall_anon.csv"))
+
+tall <- tall3[tall3$time != 3,]
 
 ```
 
@@ -227,7 +229,7 @@ In this part I will first look if habit strength of the four behaviours can be p
 ```{r}
 
 
-lme_stockhs <- lme(hs_stock ~ condition*time, random = ~1|id, data = tall)
+lme_stockhs <- lme(hs_stock ~ condition*time, random = ~1|id, data = tall3)
 flextable(tidy(lme_stockhs)) %>% colformat_double(digits = 2)
 
 emmeans_stockhs <- emmeans(lme_stockhs, specs = ~ condition | time)
@@ -252,7 +254,7 @@ ggplot(emmeans_stock_df, aes(x = time, y = emmean, color = condition, group = co
 ## Habit of letting housemates know they can eat food which is near expired
 ```{r}
 
-lme_sharehs <- lme(hs_share ~ condition*time, random = ~1|id, data = tall)
+lme_sharehs <- lme(hs_share ~ condition*time, random = ~1|id, data = tall3)
 flextable(tidy(lme_sharehs)) %>% colformat_double(digits = 2)
 
 emmeans_sharehs <- emmeans(lme_sharehs, specs = ~ condition | time)
@@ -278,7 +280,7 @@ ggplot(emmeans_share_df, aes(x = time, y = emmean, color = condition, group = co
 ## Habit of using near expired foods when preparing meals
 ```{r}
 
-lme_mealhs <- lme(hs_meal ~ condition*time, random = ~1|id, data = tall)
+lme_mealhs <- lme(hs_meal ~ condition*time, random = ~1|id, data = tall3)
 flextable(tidy(lme_mealhs)) %>% colformat_double(digits = 2)
 
 emmeans_mealhs <- emmeans(lme_mealhs, specs = ~ condition | time)
@@ -303,7 +305,7 @@ ggplot(emmeans_meal_df, aes(x = time, y = emmean, color = condition, group = con
 ## Habit of picking something which is near expired as a snack
 ```{r}
 
-lme_snackhs <- lme(hs_snack ~ condition*time, random = ~1|id, data = tall)
+lme_snackhs <- lme(hs_snack ~ condition*time, random = ~1|id, data = tall3)
 flextable(tidy(lme_snackhs)) %>% colformat_double(digits = 2)
 
 emmeans_snackhs <- emmeans(lme_snackhs, specs = ~ condition | time)
