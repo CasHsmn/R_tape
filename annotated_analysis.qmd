@@ -101,9 +101,9 @@ tall %>%
         legend.title = element_text(size = 14, family = "TT Arial"),
         legend.text = element_text(size = 12, family = "TT Arial"),
         axis.line = element_line(colour = "darkgray", size = 1, linetype = "solid"),
-        panel.background = element_rect(fill = "#F5F5F5"),
+        panel.background = element_rect(fill = "#transparent"),
         panel.grid.major = element_line(size = .05, linetype = "solid", colour = "grey")) +
-  scale_y_continuous(expand = c(0, 0), limits = c(0,NA)) +
+  scale_y_continuous(expand = c(0, 0), limits = c(0,450)) +
   scale_fill_brewer(palette = "Pastel2")
 
 tall <- mutate(tall, fw_g_log = log(fw_g + 1))
@@ -123,16 +123,17 @@ tall %>%
        x = "Time",
        y = "Food Waste (log(g))",
        fill = "Condition") +
-  theme(plot.title = element_text(size =16, family = "Arvo"),
-        axis.title = element_text(size = 14, family = "TT Arial"),
-        axis.text = element_text(size = 12, family = "TT Arial"),
-        legend.title = element_text(size = 14, family = "TT Arial"),
-        legend.text = element_text(size = 12, family = "TT Arial"),
+  theme(plot.title = element_text(size =18, family = "Arvo"),
+        axis.title = element_text(size = 16, family = "TT Arial"),
+        axis.text = element_text(size = 14, family = "TT Arial"),
+        legend.title = element_text(size = 16, family = "TT Arial"),
+        legend.text = element_text(size = 14, family = "TT Arial"),
         axis.line = element_line(colour = "darkgray", size = 1, linetype = "solid"),
-        panel.background = element_rect(fill = "#F5F5F5"),
+        panel.background = element_rect(fill = "transparent"),
         panel.grid.major = element_line(size = .05, linetype = "solid", colour = "grey")) +
   scale_y_continuous(expand = c(0, 0), limits = c(0,NA)) +
   scale_fill_brewer(palette = "Pastel2")
+
 ```
 
 ## Food waste distribution
