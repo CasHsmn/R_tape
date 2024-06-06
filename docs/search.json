@@ -11,7 +11,7 @@
     "href": "annotated_analysis.html",
     "title": "Tape Intervention R Script",
     "section": "",
-    "text": "intervention\n(N=32)\ncontrol\n(N=31)\nOverall\n(N=63)\n\n\n\n\nGender\n\n\n\n\n\nFemale\n25 (78.1%)\n22 (71.0%)\n47 (74.6%)\n\n\nMale\n6 (18.8%)\n7 (22.6%)\n13 (20.6%)\n\n\nOther\n1 (3.1%)\n2 (6.5%)\n3 (4.8%)\n\n\nAge\n\n\n\n\n\nMean (SD)\n20.4 (2.01)\n20.8 (2.16)\n20.6 (2.08)\n\n\nMedian [Min, Max]\n20.0 [18.0, 26.0]\n20.0 [18.0, 27.0]\n20.0 [18.0, 27.0]\n\n\nHousehold size\n\n\n\n\n\nMean (SD)\n6.28 (5.08)\n7.10 (5.64)\n6.68 (5.34)\n\n\nMedian [Min, Max]\n5.00 [2.00, 26.0]\n5.00 [2.00, 25.0]\n5.00 [2.00, 26.0]\n\n\nBaseline waste\n\n\n\n\n\nMean (SD)\n617 (295)\n665 (443)\n641 (373)\n\n\nMedian [Min, Max]\n538 [365, 1640]\n528 [96.0, 2170]\n528 [96.0, 2170]"
+    "text": "intervention\n(N=32)\ncontrol\n(N=31)\nOverall\n(N=63)\n\n\n\n\nGender\n\n\n\n\n\nFemale\n25 (78.1%)\n22 (71.0%)\n47 (74.6%)\n\n\nMale\n6 (18.8%)\n7 (22.6%)\n13 (20.6%)\n\n\nOther\n1 (3.1%)\n2 (6.5%)\n3 (4.8%)\n\n\nAge\n\n\n\n\n\nMean (SD)\n20.4 (2.01)\n20.8 (2.16)\n20.6 (2.08)\n\n\nMedian [Min, Max]\n20.0 [18.0, 26.0]\n20.0 [18.0, 27.0]\n20.0 [18.0, 27.0]\n\n\nHousehold size\n\n\n\n\n\nMean (SD)\n6.28 (5.08)\n7.10 (5.64)\n6.68 (5.34)\n\n\nMedian [Min, Max]\n5.00 [2.00, 26.0]\n5.00 [2.00, 25.0]\n5.00 [2.00, 26.0]\n\n\nBaseline waste\n\n\n\n\n\nMean (SD)\n256 (292)\n316 (428)\n286 (364)\n\n\nMedian [Min, Max]\n180 [1.00, 1270]\n165 [0, 1800]\n179 [0, 1800]"
   },
   {
     "objectID": "annotated_analysis.html#food-waste-distribution",

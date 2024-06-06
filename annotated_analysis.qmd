@@ -25,6 +25,9 @@ library(broom.mixed) # broom for mixed models
 library(flextable) # nice tables
 library(emmeans) # emmeans for post-hoc
 library(tidyr)
+library(showtext)
+
+showtext_auto()
 ```
 
 ```{r}
@@ -88,13 +91,20 @@ tall %>%
   mutate(ci=se*qt((1-0.05)/2 + .5, n-1)) %>% 
   ggplot(aes(x = time, y = mean, fill = condition)) +
   geom_bar(stat = "summary", fun = "mean", position = "dodge") +
-    geom_errorbar(aes(ymin = mean - ci, ymax = mean + ci),
-                position = position_dodge(width = 0.9), width = 0.25) +
-  labs(title = "Food waste (g) over time by condition with 95% CI",
+  labs(title = "Food waste (g) over time by condition",
        x = "Time",
        y = "Food Waste (g)",
        fill = "Condition") +
-  theme_minimal()  
+  theme(plot.title = element_text(size =16, family = "Arvo"),
+        axis.title = element_text(size = 14, family = "TT Arial"),
+        axis.text = element_text(size = 12, family = "TT Arial"),
+        legend.title = element_text(size = 14, family = "TT Arial"),
+        legend.text = element_text(size = 12, family = "TT Arial"),
+        axis.line = element_line(colour = "darkgray", size = 1, linetype = "solid"),
+        panel.background = element_rect(fill = "#F5F5F5"),
+        panel.grid.major = element_line(size = .05, linetype = "solid", colour = "grey")) +
+  scale_y_continuous(expand = c(0, 0), limits = c(0,NA)) +
+  scale_fill_brewer(palette = "Pastel2")
 
 tall <- mutate(tall, fw_g_log = log(fw_g + 1))
 
@@ -109,11 +119,20 @@ tall %>%
   mutate(ci=se*qt((1-0.05)/2 + .5, n-1)) %>% 
   ggplot(aes(x = time, y = mean, fill = condition)) +
   geom_bar(stat = "summary", fun = "mean", position = "dodge") +
-  labs(title = "Food waste (g) over time by condition with 95% CI",
+  labs(title = "Food waste over time by condition",
        x = "Time",
-       y = "Food Waste (g)",
+       y = "Food Waste (log(g))",
        fill = "Condition") +
-  theme_minimal()  
+  theme(plot.title = element_text(size =16, family = "Arvo"),
+        axis.title = element_text(size = 14, family = "TT Arial"),
+        axis.text = element_text(size = 12, family = "TT Arial"),
+        legend.title = element_text(size = 14, family = "TT Arial"),
+        legend.text = element_text(size = 12, family = "TT Arial"),
+        axis.line = element_line(colour = "darkgray", size = 1, linetype = "solid"),
+        panel.background = element_rect(fill = "#F5F5F5"),
+        panel.grid.major = element_line(size = .05, linetype = "solid", colour = "grey")) +
+  scale_y_continuous(expand = c(0, 0), limits = c(0,NA)) +
+  scale_fill_brewer(palette = "Pastel2")
 ```
 
 ## Food waste distribution
@@ -156,7 +175,7 @@ lm_fw_1 <- lmer(fw_g_log ~ age + gender + hh_size + (1|id), data = tall)
 
 flextable(tidy(lm_fw_1)) %>% colformat_double(digits = 2)
 
-lm_fw_0 <- lmer(fw_g_log ~ pastweek_1 + pastweek_2 + pastweek_3 + (1|id), data = tall)
+lm_fw_0 <- lmer(fw_g ~ pastweek_1 + pastweek_2 + pastweek_3 + (1|id), data = tall)
 summary(lm_fw_0)
 ```
 
@@ -167,11 +186,12 @@ summary(lm_fw_0)
 #| tbl-cap-location: top
 lm_fw_2 <- lmer(fw_g_log ~ condition*time + (1|id), data = tall)
 
-nlme_fw <- lme(fw_g_log ~ condition * time, random = ~1 | id, data = tall)
+nlme_fw <- lme(fw_g ~ condition * time, random = ~1 | id, data = tall)
 flextable(tidy(nlme_fw)) %>% colformat_double(digits = 2)
 flextable(as_tibble(confint(lm_fw_2), rownames = "term")) %>% colformat_double(digits = 3)
 
 ```
+
 # Contrasts
 The test shows a significant interaction of condition over time, so I will calculate emmeans and contrasts.
 ```{r}
