@@ -38,7 +38,7 @@ t0 <- read.csv(url("https://raw.githubusercontent.com/CasHsmn/R_tape/main/data/t
 t1 <- read.csv(url("https://raw.githubusercontent.com/CasHsmn/R_tape/main/data/t1_anon.csv"))
 t2 <- read.csv(url("https://raw.githubusercontent.com/CasHsmn/R_tape/main/data/t2_anon.csv"))
 tall3 <- read.csv(url("https://raw.githubusercontent.com/CasHsmn/R_tape/main/data/tall_anon.csv"))
-
+tall3$condition <- factor(tall3$condition)
 tall <- tall3[tall3$time != 3,]
 
 ```
@@ -53,6 +53,7 @@ t0$gender[t0$gender == 4] <- 3
 t0$gender <- factor(t0$gender, levels = c(1,2,3), labels = c("Female", "Male", "Other"))
 t0$condition <- factor(t0$condition, levels = c("intervention", "control"), labels = c("intervention", "control"))
 tall$condition <- factor(tall$condition)
+
 label(t0$gender) <- "Gender"
 label(t0$age) <- "Age"
 label(t0$hh_size) <- "Household size"
@@ -82,6 +83,8 @@ st(tall, vars = c("pastweek_1", "pastweek_2", "pastweek_3", "stock_freq_1", "hs_
 
 
 tall$time <- factor(tall$time, levels = c(0,1,2), labels = c("pre", "post", "follow-up"))
+tall3$time <- factor(tall3$time, levels = c(0,1,2,3), labels = c("pre", "post", "follow-up","final"))
+
 
 tall %>% 
   group_by(condition, time) %>% 
@@ -110,6 +113,7 @@ tall %>%
   scale_fill_brewer(palette = "Pastel2")
 
 tall <- mutate(tall, fw_g_log = log(fw_g + 1))
+tall3 <- mutate(tall3, fw_g_log = log(fw_g + 1))
 
 tall %>% 
   group_by(condition, time) %>% 
@@ -183,11 +187,16 @@ lm_fw_0 <- lme(fw_g ~ pastweek_1 + pastweek_2 + pastweek_3, random = ~1 | id, da
 ```{r}
 #| tbl-cap: Mixed model regression of food waste predicted by condition*time
 #| tbl-cap-location: top
+#| tbl-subcap:
+#| - Coefficients for mixed model predicting log transformed fw(g)
+#| - Coefficients for mixed model predicting fw(g)
+
+
 lm_fw_2 <- lme(fw_g_log ~ condition * time, random = ~1 | id, data = tall)
-flextable(tidy(lm_fw_2)) %>% colformat_double(digits = 2) %>% set_caption(caption = "Coefficients for mixed model predicting log transformed fw(g)")
+flextable(tidy(lm_fw_2)) %>% colformat_double(digits = 2)
 
 nlme_fw <- lme(fw_g ~ condition * time, random = ~1 | id, data = tall)
-flextable(tidy(nlme_fw)) %>% colformat_double(digits = 2) %>% set_caption(caption = "Coefficients for mixed model predicting fw(g)")
+flextable(tidy(nlme_fw)) %>% colformat_double(digits = 2)
 
 ```
 
@@ -227,8 +236,6 @@ In this part I will first look if habit strength of the four behaviours can be p
 
 ## Habit of checking which food is near expiry
 ```{r}
-
-
 lme_stockhs <- lme(hs_stock ~ condition*time, random = ~1|id, data = tall3)
 flextable(tidy(lme_stockhs)) %>% colformat_double(digits = 2)
 

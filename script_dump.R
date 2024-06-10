@@ -166,7 +166,7 @@ ggplot(t2df, aes(fw_g)) + geom_histogram(binwidth = 20)
 # TESTING THE MODEL WITH FW(G) INSTEAD OF LOG TRANSFORMED TO COMPARE WITH SPSS OUTPUT
 lm_fw_2_t <- lmer(fw_g ~ condition*time + (1|id), data = tall)
 
-nlme_fw_t <- lme(fw_g ~ condition * time, random = ~1 | id, data = tall)
+nlme_fw_t <- lme(fw_g_log ~ condition * time, random = ~1 | id, data = tall)
 flextable(tidy(nlme_fw_t)) %>% colformat_double(digits = 2)
 flextable(as_tibble(confint(lm_fw_2_t), rownames = "term")) %>% colformat_double(digits = 3)
 
@@ -179,7 +179,7 @@ flextable(tidy(contrasts_time_t)) %>% colformat_double(digits = 3)
 
 flextable(tidy(contrasts_t)) %>% colformat_double(digits = 3)
 
-fw_emmeans_df <- as.data.frame(fw_emmeans)
+fw_emmeans_df <- as.data.frame(fw_emmeans_t)
 
 ggplot(fw_emmeans_df, aes(x = time, y = emmean, color = condition, group = condition)) +
   geom_point(size = 3) +
@@ -309,3 +309,46 @@ fw_time2 <- fw_time + theme(plot.title = element_text(size = 36, hjust = .5),
 
 ggsave(paste0(wd$output, "fw_time2.png"), plot = fw_time2, width = 7, height = 5, units = "in", dpi = 300)
 rlang::last_trace()
+
+## BEHAVIOUR FREQUENCY OVER TIME
+stock_freq_lme <- lme(stock_freq_1 ~ condition * time, random  = ~1|id, data = tall, na.action = na.omit)
+
+stock_freq_lme <- lme(stock_freq_1 ~ condition * time, random  = ~1|id, data = tall, na.action = na.omit)
+share_freq_lme <- lme(share_freq_1 ~ condition * time, random  = ~1|id, data = tall, na.action = na.omit)
+snack_freq_lme <- lme(snack_freq_1 ~ condition * time, random  = ~1|id, data = tall, na.action = na.omit)
+meal_freq_lme <- lme(meal_freq._1 ~ condition * time, random  = ~1|id, data = tall, na.action = na.omit)
+
+summary(stock_freq_lme)
+summary(share_freq_lme)
+summary(snack_freq_lme)
+summary(meal_freq_lme)
+
+anova.lme(stock_freq_lme)
+
+
+stockem <- emmeans(stock_freq_lme, pairwise ~ condition | time, infer = T)
+pairs(stockem)
+eff_size(stockem, sigma = sigma(stock_freq_lme), edf = 101)
+
+summary(stock_freq_lme)
+plot(stockem, comparisons = T)
+pwpp(stockem)
+
+ma
+
+# MODEL COMPARISON - RM ANOVA VS LME
+lme_fw <- lme(fw_g ~ condition*time, random = ~1|id, data = tall)
+aov_fw <- aov(fw_g ~ condition*time + Error(id), data = tall)
+Anova(lme_fw)
+summary(aov_fw)
+
+anova_te
+
+library(ez)
+
+ezANOVA(data = tall, dv = fw_g, wid = id, within = time, between = condition, detailed = T)
+ezDesign(data=tall, fw_g, condition, time)
+?ezDesign
+
+anova_test(data = tall, dv = fw_g, wid = id, within = time, between = condition)
+library(rstatix)
