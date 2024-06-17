@@ -143,8 +143,22 @@ talllong <- pivot_longer(tall, names_to = "time")
 t2tall <- tall %>% 
   subset(time =="follow-up")
 
-str(tall$time)
+
 
 lm(fw_g_log ~ condition + hs_stock, data=t2tall)
 summary(lm(fw_g_log ~ condition, data=t2tall))
 ?subset
+
+# ANALYSIS WITH DIFFERENCE SCORES
+library(car)
+tall <- tall %>%
+  mutate(
+    fw_g_diff = replace_na(fw_g_diff, 0))
+
+lm_fw_diff <- lme(fw_g_diff ~ condition * time, random = ~1 | id, data = tall)
+flextable(tidy(nlme_fw)) %>% colformat_double(digits = 2)
+
+aov_fw_diff <- Anova(dv=fw_g_diff, wid=id, within=time)
+?Anova
+?anova_test
+plot(lm_fw_diff)

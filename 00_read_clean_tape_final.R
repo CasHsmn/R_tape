@@ -109,6 +109,7 @@ t2df <- t2df %>%
   mutate(condition = factor(condition, levels = c(0,1), labels = c("control", "intervention"))) %>% 
   mutate(time = 2)
 
+# Calculate habit strength scores
 t0df <- t0df %>% 
   mutate(hs_stock = (stock_hs_1 + stock_hs_2 + stock_hs_3 + stock_hs_4) / 4) %>% 
   mutate(hs_meal = (meal_hs_1 + meal_hs_2 + meal_hs_3 + meal_hs_4) / 4) %>% 
@@ -132,9 +133,21 @@ write.csv(t0df, file = "C:/Users/huism080/OneDrive - Wageningen University & Res
 write.csv(t1df, file = "C:/Users/huism080/OneDrive - Wageningen University & Research/Research/Study 2/tapeStudy/R_tape/data/t1_anon.csv", row.names = F)
 write.csv(t2df, file = "C:/Users/huism080/OneDrive - Wageningen University & Research/Research/Study 2/tapeStudy/R_tape/data/t2_anon.csv", row.names = F)
 
-####### RUN UP TO HERE TO GENERATE NEW DATA #######
 
 # this is wrong. it needs to be longer, where the variables which are shared among the datasets stay in one column, and then the time column can differentiate between the different times. Then the descriptives will be across all times
 # Need to remove the suffixes to make the colnames the same when merging so they collapse into one. Maybe suffixes can be added later, might be redundant. 
 
+merged_data <- bind_rows(t0df, t1df, t2df)
+
+# Calculate FW difference scores
+merged_data <- merged_data %>% 
+  arrange(id, time) %>% 
+  group_by(id) %>% 
+  mutate(
+    fw_g_diff = fw_g - lag(fw_g,1)
+    ) %>% 
+  ungroup()
+
 write.csv(merged_data, file = "C:/Users/huism080/OneDrive - Wageningen University & Research/Research/Study 2/tapeStudy/R_tape/data/tall_anon.csv", row.names = F)
+
+
