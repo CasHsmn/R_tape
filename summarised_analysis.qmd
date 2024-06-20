@@ -1,0 +1,154 @@
+---
+title: "YRM Data Overview"
+author: "Cas Huisman"
+format: 
+  html:
+    code-fold: true
+    code-summary: "Show R script"
+params:
+  path: "C:/Users/huism080/OneDrive - Wageningen University & Research/Research/Study 2/tapeStudy/data/" #specify the folder where the anonymised data is located
+---
+
+```{r}
+#| echo: false
+#| include: false
+#| label: libraries
+
+library(table1) # sample characteristics
+library(vtable) # summary table
+library(ggplot2) # visualisation
+library(dplyr) # data tidying
+library(AER) # tobit models
+library(lme4) # mixed regression models
+library(nlme)
+library(broom) # tidy tables
+library(broom.mixed) # broom for mixed models
+library(flextable) # nice tables
+library(emmeans) # emmeans for post-hoc
+library(tidyr)
+library(showtext)
+library(rstatix)
+library(car)
+library(tibble)
+
+showtext_auto()
+```
+
+```{r}
+#| label: read data
+#| echo: false
+
+t0 <- read.csv(url("https://raw.githubusercontent.com/CasHsmn/R_tape/main/data/t0_anon.csv"))
+t1 <- read.csv(url("https://raw.githubusercontent.com/CasHsmn/R_tape/main/data/t1_anon.csv"))
+t2 <- read.csv(url("https://raw.githubusercontent.com/CasHsmn/R_tape/main/data/t2_anon.csv"))
+tall3 <- read.csv(url("https://raw.githubusercontent.com/CasHsmn/R_tape/main/data/tall_anon.csv"))
+tall3$condition <- factor(tall3$condition)
+tall3$time <- factor(tall3$time, levels = c(0,1,2,3), labels = c("pre", "post", "post2", "post3"))
+tall <- tall3[tall3$time != "post3",]
+
+```
+
+# Sample Characteristics
+```{r}
+#| label: sample characteristics
+#| echo: false
+
+# Sample descriptives; Label sample variables and create table 1
+t0$gender[t0$gender == 4] <- 3
+t0$gender <- factor(t0$gender, levels = c(1,2,3), labels = c("Female", "Male", "Other"))
+t0$condition <- factor(t0$condition, levels = c("intervention", "control"), labels = c("intervention", "control"))
+tall$condition <- factor(tall$condition)
+
+label(t0$gender) <- "Gender"
+label(t0$age) <- "Age"
+label(t0$hh_size) <- "Household size"
+label(t0$fw_g) <- "Baseline waste"
+table1(~ gender + age + hh_size + fw_g | condition, data = t0)
+```
+
+# Descriptives
+It looks like food waste is going down for the intervention group but not the control group.
+```{r}
+#| label: barplots of food waste by condition and time
+#| tbl-cap: Bar plot
+#| ncol: 2
+#| fig-cap-location: top
+#| fig-cap: Bar plots
+#| fig-subcap: 
+#| - Food waste over time by condition with 95% CI
+#| - The log of food waste over time by condition with 95% CI
+#| warning: false
+
+
+tall$time <- factor(tall$time)
+tall3$time <- factor(tall3$time, levels = c(0,1,2,3), labels = c("pre", "post", "follow-up","final"))
+
+
+tall %>% 
+  group_by(condition, time) %>% 
+  summarise(
+    n=n(),
+    mean=mean(fw_g),
+    sd=sd(fw_g)
+  ) %>% 
+  mutate(se = sd/sqrt(n)) %>% 
+  mutate(ci=se*qt((1-0.05)/2 + .5, n-1)) %>% 
+  ggplot(aes(x = time, y = mean, fill = condition)) +
+  geom_bar(stat = "summary", fun = "mean", position = "dodge") +
+  labs(title = "Food waste (g) over time by condition",
+       x = "Time",
+       y = "Food Waste (g)",
+       fill = "Condition") +
+  theme(plot.title = element_text(size =16, family = "Arvo"),
+        axis.title = element_text(size = 14, family = "TT Arial"),
+        axis.text = element_text(size = 12, family = "TT Arial"),
+        legend.title = element_text(size = 14, family = "TT Arial"),
+        legend.text = element_text(size = 12, family = "TT Arial"),
+        axis.line = element_line(colour = "darkgray", size = 1, linetype = "solid"),
+        panel.background = element_rect(fill = "transparent"),
+        panel.grid.major = element_line(size = .05, linetype = "solid", colour = "grey")) +
+  scale_y_continuous(expand = c(0, 0), limits = c(0,450)) +
+  scale_fill_brewer(palette = "Pastel2")
+```
+
+But food waste always has a distribution with very many 0s and right-skew. However, the difference scores of food waste are normally distributed.
+```{r}
+
+ggplot(tall, aes(x = fw_g)) +
+  geom_histogram(binwidth = 20)+
+  labs(title = "Histogram of food waste (g)")
+
+ggplot(tall, aes(x = fw_g_diff)) +
+  geom_histogram(binwidth = 40)+
+  labs(title = "Histogram of food waste (g) difference scores")
+```
+# Inferential statistics
+if I just continue the analysis as is, using a mixed model, I get the following results.
+
+A significant interaction for time*condition. And a significant decrease in food waste for the intervention group from pretest to the second post test.
+```{r}
+fw_lmer <- lmer(fw_g ~ condition*time + (1|id), data = tall)
+flextable(Anova(fw_lmer, test.statistic = "F") %>% rownames_to_column(var = ".")) %>% colformat_double(digits = 3)
+
+fw_lmer_em <- emmeans(fw_lmer, specs = ~ condition | time)
+cont_time <- contrast(fw_lmer_em, method = "pairwise", by = "condition")
+
+flextable(tidy(cont_time)) %>% colformat_double(digits = 3)
+
+fw_lmer_em_df <- as.data.frame(fw_lmer_em)
+
+ggplot(fw_lmer_em_df, aes(x = time, y = emmean, color = condition, group = condition)) +
+  geom_point(size = 3) +
+  geom_line(size = 1) +
+  geom_errorbar(aes(ymin = emmean - SE, ymax = emmean + SE), width = 0.2) +
+  labs(title = "Estimated Marginal Means of fw_g by Condition and Time",
+       x = "Time",
+       y = "Food waste (g)",
+       color = "Condition") +
+  theme_minimal()
+```
+The main results for ANOVA are a bit different and these again differ from results of a RM ANOVA in SPSS. This one also has a significant interaction, but it is stronger.
+```{r}
+fw_aov <- anova_test(dv = fw_g, wid = id, within = time, between = condition, data = tall)
+flextable(fw_aov$ANOVA) %>% colformat_double(digits = 3)
+```

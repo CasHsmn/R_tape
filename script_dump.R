@@ -1,4 +1,6 @@
 library(psych)
+library(car)
+library(rstatix)
 
 part <- read.csv(paste0(wd$data, "consent_r2.csv"))
 t0 <- read.csv(paste0(wd$data, "t0_r2.csv"))
@@ -406,3 +408,132 @@ hs_meal_means <- hs_meal_means + theme(plot.title = element_text(size = 18, hjus
                                          legend.background = element_rect(fill = "#F5F5F5"),
                                          legend.position = "bottom")
 ggsave(paste0(wd$output, "hs_meal.png"), plot = hs_meal_means, width = 7, height = 5, units = "in", dpi = 300)
+
+filterfwlmer <- lmer(fw_g ~ used_tape*time + (1|id), data = tall)
+Anova(filterfwlmer)
+str(tall$used_tape)
+
+tall <- tall %>% 
+  mutate(used_tape = ifelse(is.na(used_tape) & condition == "intervention",0, used_tape))
+tall <- tall %>% 
+  mutate(used_tape = ifelse(condition == "control",2, used_tape))
+
+tall$used_tape <- factor(tall$used_tape, levels = c(0,1,2), labels = c("no", "yes", "control"))
+
+## ANALYSIS SEPARATING PEOPLE WHO DID AND DID NOT USE TAPE ##
+tall %>%
+  group_by(used_tape, time) %>% 
+  summarise(
+    n=n(),
+    mean=mean(fw_g),
+    sd=sd(fw_g)
+  ) %>% 
+  mutate(se = sd/sqrt(n)) %>% 
+  mutate(ci=se*qt((1-0.05)/2 + .5, n-1)) %>% 
+  ggplot(aes(x = time, y = mean, fill = used_tape)) +
+  geom_bar(stat = "summary", fun = "mean", position = "dodge") +
+  labs(title = "Food waste (g) over time by condition",
+       x = "Time",
+       y = "Food Waste (g)",
+       fill = "Used tape")
+
+fw_aov <- anova_test(dv = fw_g, wid = id, within = time, between = condition, data = tall)
+get_anova_table(fw_aov)
+
+compair <- tall %>% 
+  group_by(time) %>% 
+  anova_test(dv = fw_g, wid = id, between = condition) %>% 
+  get_anova_table() %>% 
+  adjust_pvalue(method = "bonferroni")
+
+get_anova_table(compair)
+tall$time <- droplevels(tall$time)
+
+tall %>% 
+  group_by(time) %>% 
+  pairwise_t_test(fw_g ~ condition, paired = T, p.adjust.method = "bonferroni")
+
+tukey_hsd(fw_aov$ANOVA, condition ~ time)
+ezANOVA(dv = fw_g, wid = id, within = time, between = condition, data = tall)
+
+library(ez)
+?Anova
+
+str(tall$time)
+get_anova_table(compair)
+ggqqplot(tall, "fw_g")+
+  facet_grid(time ~ condition)
+
+tall %>%
+  group_by(id) %>%
+  summarise(time_count = n_distinct(time)) %>%
+  filter(time_count == 3)
+
+sum(tall$condition == "intervention")
+
+tall %>%
+  filter(condition == "control") %>%
+  distinct(id) %>%
+  n_distinct() %>%
+  print()
+
+tall %>%
+  filter(condition == "control") %>%
+  group_by(id) %>%
+  filter(n_distinct(time) == 3) %>%  # Ensure all 3 time points are present
+  distinct(id) %>%
+  n_distinct() %>%
+  print()
+
+tall_new <- tall %>% 
+  mutate(fw_g = ifelse(fw_g < 10, 0, fw_g))
+sum(tall_new$fw_g == 0)
+
+hist(tall_new$fw_g)
+
+ggplot(tall_new, aes(x = fw_g)) +
+  geom_histogram(binwidth = 20)+
+  labs(title = "Histogram of food waste (g)")
+
+
+
+# DIFFERENCE SCORE
+tall <- tall %>%
+  mutate(
+    fw_g_diff = replace_na(fw_g_diff, 0))
+hist
+
+lm_fw_diff <- lme(fw_g_diff ~ condition * time, random = ~1 | id, data = tall)
+flextable(tidy(nlme_fw)) %>% colformat_double(digits = 2)
+aovfw <- aov(fw_g ~ condition*time + Error(1/time), data = tall)
+
+oaov_fw_diff <- Anova(dv=fw_g_diff, wid=id, within=time)
+?Anova
+?anova_test
+plot(lm_fw_diff)
+
+outliers <- Boxplot(tall$fw_g_diff, id=list(n=Inf))
+
+boxfw <- boxplot.stats(tall$fw_g_diff)$out
+outliers <- which(tall$fw_g_diff %in% c(boxfw))
+?Boxplot
+
+tall %>% 
+  group_by(time) %>% 
+  boxplot(fw_g_diff)
+
+tall %>% 
+Boxplot(fw_g_diff ~ time) %>% 
+  pull(id)
+
+identify_outliers(tall, fw_g_diff)
+
+Boxplot(tall$fw_g_diff, id="id")
+
+tall_filter <- tall %>% 
+  filter(!id %in% outliers)
+
+Boxplot(tall_filter$fw_g_diff)
+
+tall_wide <- pivot_wider(tall, id_cols = c("id", "condition"),names_from = "time", values_from = "fw_g")
+write.csv(tall_wide, file =  "C:/Users/huism080/OneDrive - Wageningen University & Research/Research/Study 2/tapeStudy/R_tape/data/tall_wide.csv", row.names = F)

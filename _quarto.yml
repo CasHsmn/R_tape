@@ -10,6 +10,7 @@ website:
       - href: index.qmd
         text: Home
       - annotated_analysis.qmd
+      - summarised_analysis.qmd
 
 format:
   html:

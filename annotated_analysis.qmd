@@ -39,7 +39,8 @@ t1 <- read.csv(url("https://raw.githubusercontent.com/CasHsmn/R_tape/main/data/t
 t2 <- read.csv(url("https://raw.githubusercontent.com/CasHsmn/R_tape/main/data/t2_anon.csv"))
 tall3 <- read.csv(url("https://raw.githubusercontent.com/CasHsmn/R_tape/main/data/tall_anon.csv"))
 tall3$condition <- factor(tall3$condition)
-tall <- tall3[tall3$time != 3,]
+tall3$time <- factor(tall3$time, levels = c(0,1,2,3), labels = c("pre", "post", "post2", "post3"))
+tall <- tall3[tall3$time != "post3",]
 
 ```
 
@@ -82,8 +83,8 @@ st(tall, vars = c("pastweek_1", "pastweek_2", "pastweek_3", "stock_freq_1", "hs_
 #| warning: false
 
 
-tall$time <- factor(tall$time, levels = c(0,1,2), labels = c("pre", "post", "follow-up"))
-tall3$time <- factor(tall3$time, levels = c(0,1,2,3), labels = c("pre", "post", "follow-up","final"))
+tall$time <- factor(tall$time)
+tall3$time <- factor(tall3$time)
 
 
 tall %>% 

@@ -82,7 +82,7 @@ fw_manualdf <- assign_participant_ids(fw_manual) %>% select(!RecipientEmail)
 # Add the indirect weights and condition to the dfs
 t0df <- t0df %>%
   left_join(select(fw_manualdf, id, fw_g_t0), by = "id") %>%
-  left_join(select(randomdf, id, condition), by = "id") %>% 
+  left_join(select(randomdf, id, condition, used_tape), by = "id") %>% 
   left_join(select(signupconsentdf, id, hh_size), by = "id") %>% 
   mutate(across(c("fw_g", "hh_size", 7:26), as.numeric)) %>%
   mutate(fw_g = ifelse(!is.na(fw_g_t0), fw_g_t0, fw_g)) %>%
@@ -94,7 +94,7 @@ t0df <- t0df %>%
 
 t1df <- t1df %>%
   left_join(select(fw_manualdf, id, fw_g_t1), by = "id") %>%
-  left_join(select(randomdf, id, condition), by = "id") %>% 
+  left_join(select(randomdf, id, condition, used_tape), by = "id") %>% 
   left_join(select(signupconsentdf, id, hh_size), by = "id") %>%
   mutate(across(c("fw_g", "hh_size", 7:26), as.numeric)) %>% 
   mutate(fw_g = ifelse(!is.na(fw_g_t1), fw_g_t1, fw_g)) %>%
@@ -106,7 +106,7 @@ t1df <- t1df %>%
 
 t2df <- t2df %>%
   left_join(select(fw_manualdf, id, fw_g_t2), by = "id") %>%
-  left_join(select(randomdf, id, condition), by = "id") %>% 
+  left_join(select(randomdf, id, condition, used_tape), by = "id") %>% 
   left_join(select(signupconsentdf, id, hh_size), by = "id") %>%
   mutate(across(c("fw_g", "hh_size", 7:26), as.numeric)) %>% 
   mutate(fw_g = ifelse(!is.na(fw_g_t2), fw_g_t2, fw_g)) %>%
@@ -158,5 +158,14 @@ write.csv(t3df, file = "C:/Users/huism080/OneDrive - Wageningen University & Res
 # this is wrong. it needs to be longer, where the variables which are shared among the datasets stay in one column, and then the time column can differentiate between the different times. Then the descriptives will be across all times
 # Need to remove the suffixes to make the colnames the same when merging so they collapse into one. Maybe suffixes can be added later, might be redundant. 
 merged_data <- bind_rows(t0df, t1df, t2df, t3df)
+
+# Calculate FW difference scores
+merged_data <- merged_data %>% 
+  arrange(id, time) %>% 
+  group_by(id) %>% 
+  mutate(
+    fw_g_diff = fw_g - lag(fw_g,1)
+  ) %>% 
+  ungroup()
 
 write.csv(merged_data, file = "C:/Users/huism080/OneDrive - Wageningen University & Research/Research/Study 2/tapeStudy/R_tape/data/tall_anon.csv", row.names = F)
