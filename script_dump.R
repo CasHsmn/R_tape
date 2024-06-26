@@ -1,6 +1,4 @@
 library(psych)
-library(car)
-library(rstatix)
 
 part <- read.csv(paste0(wd$data, "consent_r2.csv"))
 t0 <- read.csv(paste0(wd$data, "t0_r2.csv"))
@@ -250,34 +248,6 @@ plot(fw_log_lmer)
 qqmath(fw_log_lmer)
 hist(resid(fw_log_lmer))
 
-fw_log_hs <- lme(fw_g_log ~ condition*time*hs_stock, random = ~1|id, data=tall)
-summary(fw_log_hs)
-
-hs_emm <- emmeans(fw_log_hs, ~ condition * time * hs_stock | time)
-contrast(hs_emm, "consec", simple = "each", combine = T, adjust = "mvt")
-
-fw_hs_emmeans <- emmeans(fw_log_hs, specs = ~ condition*time*hs_stock | time)
-contrasts <- contrast(fw_hs_emmeans, method = "pairwise", adjust = "tukey")
-contrasts_time <- contrast(fw_hs_emmeans, method = "pairwise", by = "condition")
-flextable(tidy(contrasts_time)) %>% colformat_double(digits = 3)
-
-flextable(tidy(contrasts)) %>% colformat_double(digits = 3)
-
-fw_hs_emmeans_df <- as.data.frame(fw_hs_emmeans)
-
-ggplot(fw_hs_emmeans_df, aes(x = time, y = emmean, color = hs_stock, group = condition)) +
-  geom_point(size = 3) +
-  geom_line(size = 1) +
-  geom_errorbar(aes(ymin = emmean - SE, ymax = emmean + SE), width = 0.2) +
-  labs(title = "Estimated Marginal Means of fw_g_log by Condition and Time",
-       x = "Time",
-       y = "Log Transformed Food Waste (fw_g_log)",
-       color = "Condition") +
-  theme_minimal()
-
-
-library(lattice)
-
 library(robustlmm)
 fw_rlmer <- robustlmm::rlmer(fw_g ~ condition*time + (1|id), data = tall)
 ?rlmer
@@ -315,225 +285,122 @@ library(semPlot)
 semPaths(med_res, rotation = 2, whatLabels = "est", style = "lisrel")
 ?semPaths
 
-fw_log_time <- fw_log_time + theme(plot.title = element_text(size = 18, hjust = .5),
-                                   axis.title = element_text(size = 16),
-                                   legend.title = element_text(size = 16),
-                                   axis.text = element_text(size = 14),
-                                   legend.text = element_text(size = 14),
-                                   panel.background = element_rect(fill = "#F5F5F5"),
-                                   plot.background = element_rect(fill = "#F5F5F5"),
-                                   legend.background = element_rect(fill = "#F5F5F5"),
-                                   legend.position = "bottom")
-
-ggsave(paste0(wd$output, "fw_log_time.png"), plot = fw_log_time, width = 7, height = 5, units = "in", dpi = 300)
-
-fw_time <- fw_time + theme(plot.title = element_text(size = 18, hjust = .5),
-                               axis.title = element_text(size = 16),
-                               legend.title = element_text(size = 16),
-                               axis.text = element_text(size = 14),
-                               legend.text = element_text(size = 14),
-                               panel.background = element_rect(fill = "#F5F5F5"),
-                               plot.background = element_rect(fill = "#F5F5F5"),
-                               legend.background = element_rect(fill = "#F5F5F5"),
-                           legend.position = "bottom")
-  
-
-ggsave(paste0(wd$output, "fw_time.png"), plot = fw_time, width = 7, height = 5, units = "in", dpi = 300)
-
-# STOCK EMMEANS FIGURE
-hs_stock_means <- ggplot(emmeans_stock_df, aes(x = time, y = emmean, color = condition, group = condition)) +
-  geom_point(size = 3) +
-  geom_line(linewidth = 2) +
-  geom_errorbar(aes(ymin = emmean - SE, ymax = emmean + SE), width = 0.1) +
-  labs(title = "Checking if food is near expired",
-       x = "Time",
-       y = "Habit strength",
-       color = "Condition") +
-  scale_color_brewer(palette = "Pastel1")+
-  scale_y_continuous(limits = c(4.0,6))
-
-hs_stock_means <- hs_stock_means + theme(plot.title = element_text(size = 18, hjust = .5),
-                                         axis.title = element_text(size = 16),
-                                         legend.title = element_text(size = 16),
-                                         axis.text = element_text(size = 14),
-                                         legend.text = element_text(size = 16),
-                                         panel.background = element_rect(fill = "#F5F5F5"),
-                                         plot.background = element_rect(fill = "#F5F5F5"),
-                                         legend.background = element_rect(fill = "#F5F5F5"),
-                                         legend.position = "bottom")
-
-ggsave(paste0(wd$output, "hs_stock.png"), plot = hs_stock_means, width = 7, height = 5, units = "in", dpi = 300)
-
-# SHARE EMMEANS FIGURE
-hs_share_means <- ggplot(emmeans_share_df, aes(x = time, y = emmean, color = condition, group = condition)) +
-  geom_point(size = 3) +
-  geom_line(linewidth = 2) +
-  geom_errorbar(aes(ymin = emmean - SE, ymax = emmean + SE), width = 0.2) +
-  labs(title = "Estimated Marginal Means of habit strength of share checking by Condition and Time",
-       x = "Time",
-       y = "Habit strength",
-       color = "Condition") +
-  scale_color_brewer(palette = "Pastel1")+
-  scale_y_continuous(limits = c(3,6))
-
-hs_share_means <- hs_share_means + theme(plot.title = element_text(size = 18, hjust = .5),
-                                         axis.title = element_text(size = 16),
-                                         legend.title = element_text(size = 16),
-                                         axis.text = element_text(size = 14),
-                                         legend.text = element_text(size = 16),
-                                         panel.background = element_rect(fill = "#F5F5F5"),
-                                         plot.background = element_rect(fill = "#F5F5F5"),
-                                         legend.background = element_rect(fill = "#F5F5F5"),
-                                         legend.position = "bottom")
-
-# meal EMMEANS FIGURE
-hs_meal_means <- ggplot(emmeans_meal_df, aes(x = time, y = emmean, color = condition, group = condition)) +
-  geom_point(size = 3) +
-  geom_line(linewidth = 2) +
-  geom_errorbar(aes(ymin = emmean - SE, ymax = emmean + SE), width = 0.2) +
-  labs(title = "Using near expired food in meals",
-       x = "Time",
-       y = "Habit strength",
-       color = "Condition") +
-  scale_color_brewer(palette = "Pastel1")+
-  scale_y_continuous(limits = c(4,6))
-
-hs_meal_means <- hs_meal_means + theme(plot.title = element_text(size = 18, hjust = .5),
-                                         axis.title = element_text(size = 16),
-                                         legend.title = element_text(size = 16),
-                                         axis.text = element_text(size = 14),
-                                         legend.text = element_text(size = 16),
-                                         panel.background = element_rect(fill = "#F5F5F5"),
-                                         plot.background = element_rect(fill = "#F5F5F5"),
-                                         legend.background = element_rect(fill = "#F5F5F5"),
-                                         legend.position = "bottom")
-ggsave(paste0(wd$output, "hs_meal.png"), plot = hs_meal_means, width = 7, height = 5, units = "in", dpi = 300)
-
-filterfwlmer <- lmer(fw_g ~ used_tape*time + (1|id), data = tall)
-Anova(filterfwlmer)
-str(tall$used_tape)
-
-tall <- tall %>% 
-  mutate(used_tape = ifelse(is.na(used_tape) & condition == "intervention",0, used_tape))
-tall <- tall %>% 
-  mutate(used_tape = ifelse(condition == "control",2, used_tape))
-
-tall$used_tape <- factor(tall$used_tape, levels = c(0,1,2), labels = c("no", "yes", "control"))
-
-## ANALYSIS SEPARATING PEOPLE WHO DID AND DID NOT USE TAPE ##
-tall %>%
-  group_by(used_tape, time) %>% 
-  summarise(
-    n=n(),
-    mean=mean(fw_g),
-    sd=sd(fw_g)
-  ) %>% 
-  mutate(se = sd/sqrt(n)) %>% 
-  mutate(ci=se*qt((1-0.05)/2 + .5, n-1)) %>% 
-  ggplot(aes(x = time, y = mean, fill = used_tape)) +
-  geom_bar(stat = "summary", fun = "mean", position = "dodge") +
-  labs(title = "Food waste (g) over time by condition",
-       x = "Time",
-       y = "Food Waste (g)",
-       fill = "Used tape")
-
-fw_aov <- anova_test(dv = fw_g, wid = id, within = time, between = condition, data = tall)
-get_anova_table(fw_aov)
-
-compair <- tall %>% 
-  group_by(time) %>% 
-  anova_test(dv = fw_g, wid = id, between = condition) %>% 
-  get_anova_table() %>% 
-  adjust_pvalue(method = "bonferroni")
-
-get_anova_table(compair)
-tall$time <- droplevels(tall$time)
-
-tall %>% 
-  group_by(time) %>% 
-  pairwise_t_test(fw_g ~ condition, paired = T, p.adjust.method = "bonferroni")
-
-tukey_hsd(fw_aov$ANOVA, condition ~ time)
-ezANOVA(dv = fw_g, wid = id, within = time, between = condition, data = tall)
-
-library(ez)
-?Anova
-
-str(tall$time)
-get_anova_table(compair)
-ggqqplot(tall, "fw_g")+
-  facet_grid(time ~ condition)
-
-tall %>%
-  group_by(id) %>%
-  summarise(time_count = n_distinct(time)) %>%
-  filter(time_count == 3)
-
-sum(tall$condition == "intervention")
-
-tall %>%
-  filter(condition == "control") %>%
-  distinct(id) %>%
-  n_distinct() %>%
-  print()
-
-tall %>%
-  filter(condition == "control") %>%
-  group_by(id) %>%
-  filter(n_distinct(time) == 3) %>%  # Ensure all 3 time points are present
-  distinct(id) %>%
-  n_distinct() %>%
-  print()
-
-tall_new <- tall %>% 
-  mutate(fw_g = ifelse(fw_g < 10, 0, fw_g))
-sum(tall_new$fw_g == 0)
-
-hist(tall_new$fw_g)
-
-ggplot(tall_new, aes(x = fw_g)) +
-  geom_histogram(binwidth = 20)+
-  labs(title = "Histogram of food waste (g)")
-
-
-
-# DIFFERENCE SCORE
-tall <- tall %>%
-  mutate(
-    fw_g_diff = replace_na(fw_g_diff, 0))
-hist
-
-lm_fw_diff <- lme(fw_g_diff ~ condition * time, random = ~1 | id, data = tall)
-flextable(tidy(nlme_fw)) %>% colformat_double(digits = 2)
-aovfw <- aov(fw_g ~ condition*time + Error(1/time), data = tall)
-
-oaov_fw_diff <- Anova(dv=fw_g_diff, wid=id, within=time)
-?Anova
-?anova_test
-plot(lm_fw_diff)
-
-outliers <- Boxplot(tall$fw_g_diff, id=list(n=Inf))
-
-boxfw <- boxplot.stats(tall$fw_g_diff)$out
-outliers <- which(tall$fw_g_diff %in% c(boxfw))
-?Boxplot
-
-tall %>% 
-  group_by(time) %>% 
-  boxplot(fw_g_diff)
-
-tall %>% 
-Boxplot(fw_g_diff ~ time) %>% 
-  pull(id)
-
-identify_outliers(tall, fw_g_diff)
-
-Boxplot(tall$fw_g_diff, id="id")
-
-tall_filter <- tall %>% 
-  filter(!id %in% outliers)
-
-Boxplot(tall_filter$fw_g_diff)
+colnames(tall)
 
 tall_wide <- pivot_wider(tall, id_cols = c("id", "condition"),names_from = "time", values_from = "fw_g")
 write.csv(tall_wide, file =  "C:/Users/huism080/OneDrive - Wageningen University & Research/Research/Study 2/tapeStudy/R_tape/data/tall_wide.csv", row.names = F)
+
+hist(fw_lmer)
+
+resid(fw_lmer)
+qqnorm(resid(fw_lmer))
+library(ez)
+library(robustlmm)
+library(Matrix)
+ezANOVA(dv = fw_g, wid = id, within = time, between = condition, data = tall)
+?ezANOVA
+resid(fw_aov)
+
+lm_fw_2 <- lme(fw_g ~ condition * time, random = ~1 | id, data = tall)
+fwlog_lmer <- lmer(fw_g_log ~ time * condition + (1|id), data = tall)
+
+ggplot(data.frame(eta=predict(fw_lmer,type="link"),pearson=residuals(fw_lmer,type="pearson")),
+       aes(x=eta,y=pearson)) +
+  geom_point() +
+  theme_bw()
+
+rlm_fw <- rlmer(fw_g ~ time * condition + (1|id), data = tall)
+
+qqnorm(resid(fw_lmer))
+library(ggpubr)
+shapiro.test(tall$fw_g)
+ggqqplot(tall$fw_g)
+plot(fw_lmer)
+hist(resid(fw_lmer))
+??ols_test_normality
+plot(lm_fw_2)
+plot(fwlog_lmer)
+
+plot(resid(fw_lmer))
+plot(fw_lmer)
+
+## REMOVE OUTLIERS
+fw_iqr <- quantile(tall$fw_g, 0.75) - quantile(tall$fw_g, 0.25)
+lower <- quantile(tall$fw_g, 0.25) - 1.5*fw_iqr
+upper <- lower <- quantile(tall$fw_g, 0.75) + 1.5*fw_iqr
+
+fw_outliers <- tall %>% 
+  filter(fw_g < lower | fw_g > upper) %>% 
+  pull(id)
+
+
+tall_nooutlier <- tall %>% 
+  filter(!(id %in% fw_outliers & (fw_g < lower | fw_g > upper)))
+
+
+
+filt_fw_lmer <- lmer(fw_g ~ time * condition + (1|id), data = tall_nooutlier)
+filt_em <- emmeans(filt_fw_lmer, specs = ~ condition * time)
+filt_em_df <- data.frame(filt_em)
+Anova(filt_fw_lmer, test.statistic = "F")
+Anova(fw_lmer, test.statistic = "F")
+
+ggplot(filt_em_df, aes(x = time, y = emmean, color = condition, group = condition)) +
+  geom_point(size = 3) +
+  geom_line(size = 1) +
+  geom_errorbar(aes(ymin = emmean - SE, ymax = emmean + SE), width = 0.2) +
+  labs(title = "Estimated Marginal Means of fw_g_log by Condition and Time",
+       x = "Time",
+       y = "Log Transformed Food Waste (fw_g_log)",
+       color = "Condition") +
+  theme_minimal()
+plot(filt_fw_lmer)
+
+plot(fw_lmer)
+qqnorm(tall_nooutlier$fw_g)
+
+
+tall_filter1 <- tall_nooutlier %>% 
+  filter(!fw_g < 10)
+filt_fw_lmer_1 <- lmer(fw_g ~ time * condition + (1|id), data = tall_filter1)
+plot(filt_fw_lmer_1)
+Anova(filt_fw_lmer_1)
+filt_1_em <- emmeans(filt_fw_lmer_1, specs = ~ condition*time)
+filt_1_em_df <- data.frame(filt_1_em)
+ggplot(filt_1_em_df, aes(x = time, y = emmean, color = condition, group = condition)) +
+  geom_point(size = 3) +
+  geom_line(size = 1) +
+  geom_errorbar(aes(ymin = emmean - SE, ymax = emmean + SE), width = 0.2) +
+  labs(title = "Estimated Marginal Means of fw_g_log by Condition and Time",
+       x = "Time",
+       y = "Log Transformed Food Waste (fw_g_log)",
+       color = "Condition") +
+  theme_minimal()
+plot(filt_fw_lmer)
+
+install.packages("brms")
+
+
+
+## TRYING OUT BRMS FOR CENSORED MIXED MODEL
+## this might work? but is pretty complex https://bookdown.org/content/3686/tools-in-the-trunk.html#censored-data-in-jags-brms
+# maybe also try just censreg with the difference score from pre to post2
+
+lower_bound <- 2
+upper_bound <- 8
+tall$fw_g_log <- pmin(pmax(tall$fw_g_log, lower_bound), upper_bound)
+tall$cens <- ifelse(tall$fw_g_log <= lower_bound, "left", 
+                    ifelse(tall$fw_g_log >= upper_bound, "right", "none"))
+
+tall_cens <- tall
+tall_cens$fw_g <- ifelse(tall_cens$fw_g < 10, 0, tall_cens$fw_g)
+tall_cens$cens <- ifelse(tall_cens$fw_g <10, "left", "none")
+
+tobit <- brm(
+  bf(fw_g | cens(cens) ~ condition * time + (1 | id)),
+  data = tall_cens,
+  family = student(),
+  chains = 4,
+  iter = 2000,
+  control = list(adapt_delta = 0.95)
+)
