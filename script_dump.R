@@ -297,6 +297,7 @@ qqnorm(resid(fw_lmer))
 library(ez)
 library(robustlmm)
 library(Matrix)
+library(tibble)
 ezANOVA(dv = fw_g, wid = id, within = time, between = condition, data = tall)
 ?ezANOVA
 resid(fw_aov)
@@ -404,3 +405,241 @@ tobit <- brm(
   iter = 2000,
   control = list(adapt_delta = 0.95)
 )
+
+
+filterfwlmer <- lmer(fw_g ~ used_tape*time + (1|id), data = tall)
+Anova(filterfwlmer)
+str(tall$used_tape)
+
+tall <- tall %>% 
+  mutate(used_tape = ifelse(is.na(used_tape) & condition == "intervention",0, used_tape))
+tall <- tall %>% 
+  mutate(used_tape = ifelse(condition == "control",2, used_tape))
+
+tall$used_tape <- factor(tall$used_tape, levels = c(0,1,2), labels = c("no", "yes", "control"))
+
+## ANALYSIS SEPARATING PEOPLE WHO DID AND DID NOT USE TAPE ##
+tall %>%
+  group_by(used_tape, time) %>% 
+  summarise(
+    n=n(),
+    mean=mean(fw_g),
+    sd=sd(fw_g)
+  ) %>% 
+  mutate(se = sd/sqrt(n)) %>% 
+  mutate(ci=se*qt((1-0.05)/2 + .5, n-1)) %>% 
+  ggplot(aes(x = time, y = mean, fill = used_tape)) +
+  geom_bar(stat = "summary", fun = "mean", position = "dodge") +
+  labs(title = "Food waste (g) over time by condition",
+       x = "Time",
+       y = "Food Waste (g)",
+       fill = "Used tape")+
+  theme(text = element_text(size = 16))
+
+ggsave(paste0(wd$output, "fw_by_tape_use.png"), dpi = 300)
+
+fw_aov <- anova_test(dv = fw_g, wid = id, within = time, between = used_tape, data = tall)
+get_anova_table(fw_aov)
+
+used_tape_lmer.1 <- lmer(fw_g ~ 1 + (1|id), REML = F, data = tall)
+used_tape_lmer.2 <- update(used_tape_lmer.1, .~. + condition)
+used_tape_lmer.3 <- update(used_tape_lmer.2, .~. + time)
+used_tape_lmer.4 <- update(used_tape_lmer.3, .~. + condition:time)
+used_tape_lmer.f <- lmer(fw_g ~ condition*time + (1|id), REML = F, data = tall)
+anova(used_tape_lmer.1,used_tape_lmer.1, used_tape_lmer.2, used_tape_lmer.3,used_tape_lmer.4)
+
+nova(used_tape_lmer.1,used_tape_lmer.f)
+?anova
+glht()
+
+Anova(used_tape_lmer, test = "F")
+flextable(data.frame(Anova(used_tape_lmer, test = "F"))%>% rownames_to_column(".")) %>% colformat_double(digits = 4)
+
+fw_lmer <- lmer(fw_g ~ condition*time + (1|id), data = tall)
+Anova(fw_lmer, test = "F")
+flextable(data.frame(Anova(fw_lmer, test = "F"))%>% rownames_to_column(".")) %>% colformat_double(digits = 4)
+
+
+fw_rmaov <- anova_test(dv = fw_g, wid = id, within = time, between = condition, data = tall)
+flextable(data.frame(get_anova_table(fw_rmaov)))
+aov(fw_g ~ time*condition + Error(1|id), data = tall)
+
+
+ggqqplot(tall, "fw_g") + facet_grid(time ~ condition)
+library(ggpubr)
+tall %>% 
+  group_by(condition, time) %>% 
+  shapiro_test(fw_g)
+ggboxplot(tall, x = "time", y = "fw_g", color = "condition")
+
+used_tape_em <- emmeans(used_tape_lmer, specs = ~ used_tape | time)
+used_tape_contrasts_time <- contrast(used_tape_em, method = "pairwise", by = "used_tape")
+used_tape_contrasts <- contrast(used_tape_em, method = "pairwise")
+
+used_tape_em_df <- as.data.frame(used_tape_em)
+
+ggplot(used_tape_em_df, aes(x = time, y = emmean, color = used_tape, group = used_tape)) +
+  geom_point(size = 3) +
+  geom_line(size = 1) +
+  labs(
+       x = "Time",
+       y = "Food waste",
+       color = "Condition") +
+  ylim(0,400)+
+  theme_minimal()+
+  theme(text = element_text(size = 18))
+
+ggsave(paste0(wd$output, "usedtapeem.png"))
+
+fw_lmer_em <- emmeans(fw_lmer, specs = ~ condition | time)
+fw_lmer_con <- contrast(fw_lmer_em, method = "pairwise", by = "condition")
+ezANOVA(data=tall, dv = .(fw_g), wid = .(id), within = .(time), between = .(condition), detailed = T, type = 3)
+
+fw_lmer_em_df <- as.data.frame(fw_lmer_em)
+
+ggplot(fw_lmer_em_df, aes(x = time, y = emmean, color = condition, group = condition)) +
+  geom_point(size = 3) +
+  geom_line(size = 1) +
+  labs(
+    x = "Time",
+    y = "Food waste",
+    color = "Condition") +
+  ylim(0,400)+
+  theme_minimal()+
+  theme(text = element_text(size = 18))
+
+ggsave(paste0(wd$output, "conditionem.png"))
+
+test_use <- aov(hh_size ~ used_tape, data = t0)
+
+summary(test_use)
+
+compair <- tall %>% 
+  group_by(time) %>% 
+  anova_test(dv = fw_g, wid = id, between = used_tape) %>% 
+  get_anova_table() %>% 
+  adjust_pvalue(method = "bonferroni")
+
+get_anova_table(compair)
+tall$time <- droplevels(tall$time)
+
+tall %>% 
+  group_by(time) %>% 
+  pairwise_t_test(fw_g ~ condition, paired = T, p.adjust.method = "bonferroni")
+
+tukey_hsd(fw_aov$ANOVA, condition ~ time)
+ezANOVA(dv = fw_g, wid = id, within = time, between = condition, data = tall)
+
+library(ez)
+?Anova
+
+str(tall$time)
+get_anova_table(compair)
+ggqqplot(tall, "fw_g")+
+  facet_grid(time ~ condition)
+
+tall %>%
+  group_by(id) %>%
+  summarise(time_count = n_distinct(time)) %>%
+  filter(time_count == 3)
+
+sum(tall$condition == "intervention")
+
+tall %>%
+  filter(condition == "control") %>%
+  distinct(id) %>%
+  n_distinct() %>%
+  print()
+
+tall %>%
+  filter(condition == "control") %>%
+  group_by(id) %>%
+  filter(n_distinct(time) == 3) %>%  # Ensure all 3 time points are present
+  distinct(id) %>%
+  n_distinct() %>%
+  print()
+
+tall_new <- tall %>% 
+  mutate(fw_g = ifelse(fw_g < 10, 0, fw_g))
+sum(tall_new$fw_g == 0)
+
+hist(tall_new$fw_g)
+
+ggplot(tall_new, aes(x = fw_g)) +
+  geom_histogram(binwidth = 20)+
+  labs(title = "Histogram of food waste (g)")
+
+
+fw_hs_stock <- update(used_tape_lmer.4, .~. + hs_stock)
+anova(used_tape_lmer.4, fw_hs_stock)
+
+fw_hsstock_em <- emmeans(fw_hs_stock, specs = ~ condition | time)
+fw_hsstock_em_df <- data.frame(fw_hsstock_em)
+
+ggplot(fw_hsstock_em_df, aes(x = time, y = emmean, color = condition, group = condition)) +
+  geom_point(size = 3) +
+  geom_line(size = 1) +
+  geom_errorbar(aes(ymin = emmean - SE, ymax = emmean + SE), width = 0.2) +
+  labs(title = "Estimated Marginal Means of habit strength of share checking by Condition and Time",
+       x = "Time",
+       y = "Habit strength",
+       color = "Condition") +
+  theme_minimal()
+
+fw_hs_stock <- lmer(fw_g ~ hs_stock*condition*time + (1|id), data = tall)
+Anova(fw_hs_stock)
+fw_hs_meal <- lmer(fw_g ~ hs_meal*condition*time + (1|id), data = tall)
+tukey_hsd(fw_hs_meal)
+Anova(fw_hs_meal, test = "F")
+fw_hs_stock_em <- emtrends(fw_hs_stock, specs = ~ condition +time | hs_stock)
+
+fw_hs_meal_em <- emtrends(fw_hs_meal, ~ time, var = "hs_meal" )
+fw_hs_meal_em$contrasts
+
+summary(fw_hs_meal_em)
+?emtrends
+emmip(fw_hs_meal, time ~hs_meal, cov.reduce = range)
+emmip(fw_hs_stock,time ~hs_stock, cov.reduce = range)
+
+pairs(fw_hs_meal_em)
+
+hs_stock_pred <- lmer(hs_stock ~ time*condition + (1|id), data = tall3)
+Anova(hs_stock_pred, test = "F")
+hs_stock_pred_em <- data.frame(emmeans(hs_stock_pred, specs = ~ condition | time))
+ggplot(hs_stock_pred_em, aes(x = time, y = emmean, color = condition, group = condition)) +
+  geom_point(size = 3) +
+  geom_line(size = 1) +
+  geom_errorbar(aes(ymin = emmean - SE, ymax = emmean + SE), width = 0.2) +
+  labs(title = "Estimated Marginal Means of habit strength of share checking by Condition and Time",
+       x = "Time",
+       y = "Habit strength",
+       color = "Condition") +
+  theme_minimal()
+
+tall_wide <- tall %>% 
+  pivot_wider(id_cols = c("id", "condition"), names_from = time, values_from = c(fw_g, hs_stock, hs_meal))
+
+tall_wide <- tall_wide %>% 
+  mutate(hs_stock_diff = hs_stock_post2 - hs_stock_pre,
+         hs_meal_diff = hs_meal_post,
+         fw_diff = fw_g_post2 - fw_g_pre)
+
+hsstock_med <- lm(hs_diff ~ condition, data = tall_wide)
+hsmeal_med <- lm(hs_meal_diff ~ condition, data = tall_wide)
+
+lmer(fw_g ~ hs_stock*condition*time +  (1|id), data = tall)
+
+full_mod <- lm(fw_diff ~ hs_diff*condition, data = tall_wide)
+summary(full_mod)
+summary(hs_med)
+boxplot(tall_wide$hs_diff ~ tall_wide$condition)
+
+mediation_check <- mediate(hsstock_med, full_mod, treat = "condition", mediator = "hs_diff", control.value = "control", treat.value = "intervention", boot = T)
+mediat <- mediate(hs_med, full_mod, treat = "condition", mediator = "hs_diff", control.value = "control", treat.value = "intervention")
+summary(mediation_check)
+
+
+summary(mediation_check)
+summary(mediat)
+
+Anova(lmer(fw_g ~ hs_meal*condition*time + (1|id), data = tall))

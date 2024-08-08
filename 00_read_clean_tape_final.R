@@ -51,6 +51,9 @@ signupconsent$RecipientEmail[signupconsent$RecipientEmail == "annerooseikelenboo
 t0$fw_g[1] <- t0$fw_g[1] + 373 # add weight of bin if person did not include it
 t0$fw_g[12] <- t0$fw_g[12] + 373 # add weight of bin if person did not include it
 
+t0$fw_g <- ifelse(t0$fw_g > 365 & t0$fw_g < 380, 373, t0$fw_g)
+t1$fw_g <- ifelse(t1$fw_g > 365 & t1$fw_g < 380, 373, t1$fw_g)
+t2$fw_g <- ifelse(t2$fw_g > 365 & t2$fw_g < 380, 373, t2$fw_g)
 
 # select only the questions, removing metadata
 t0df <- t0 %>% 
